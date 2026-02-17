@@ -113,7 +113,7 @@ def main():
 def login(url, username, password, token, output_format):
     """Login to WeKan and get authentication token"""
     if token:
-        click.echo("Token provided, no need to login")
+        click.echo("Token provided, no need to login", err=True)
         return
     
     if not username:
