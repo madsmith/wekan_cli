@@ -66,3 +66,30 @@ class CardSummary(CardId):
 class CardDetails(CardId):
     title: str
     description: str | None = None
+
+
+class Comment(WeKanModel):
+    commentId: str = Field(validation_alias="_id")
+    comment: str
+    authorId: str
+
+
+class Checklist(WeKanModel):
+    checklistId: str = Field(validation_alias="_id")
+    title: str
+
+
+class ChecklistItem(WeKanModel):
+    checklistItemId: str = Field(validation_alias="_id")
+    title: str
+    isFinished: bool
+
+
+class ChecklistDetails(WeKanModel):
+    checklistId: str = Field(validation_alias="_id")
+    cardId: str | None = None
+    title: str
+    finishedAt: str | None = None
+    createdAt: str | None = None
+    sort: int | None = None
+    items: list[ChecklistItem] | None = None

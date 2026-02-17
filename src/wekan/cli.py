@@ -207,9 +207,9 @@ def cards(client: WeKanClient, board_id, list_id, output_format):
 
 
 @main.command()
-@click.argument("board_id")
-@click.argument("list_id")
 @click.argument("card_id")
+@click.argument("board_id", required=False)
+@click.argument("list_id", required=False)
 @click.option("--url", help="WeKan instance URL")
 @click.option("--username", help="Username for authentication")
 @click.option("--password", help="Password for authentication", hide_input=True)
@@ -223,9 +223,16 @@ def cards(client: WeKanClient, board_id, list_id, output_format):
 )
 @handle_errors
 @with_client_login
-def card(client: WeKanClient, board_id, list_id, card_id, output_format):
-    """Get details of a specific card"""
-    result = client.get_card(board_id, list_id, card_id)
+def card(client: WeKanClient, card_id, board_id, list_id, output_format):
+    """Get details of a specific card.
+
+    With one argument, looks up by CARD_ID only.
+    With three arguments: CARD_ID BOARD_ID LIST_ID.
+    """
+    if board_id and list_id:
+        result = client.get_card(board_id, list_id, card_id)
+    else:
+        result = client.get_card_by_id(card_id)
     click.echo(format_output(result, output_format))
 
 
@@ -306,6 +313,238 @@ def create_card(
     result = client.create_card(
         board_id, list_id, title, author_id, swimlane_id, description
     )
+    click.echo(format_output(result, output_format))
+
+
+@main.command()
+@click.argument("board_id")
+@click.argument("list_id")
+@click.argument("card_id")
+@click.option("--title", help="New title")
+@click.option("--description", help="New description")
+@click.option("--color", help="New color")
+@click.option("--label-ids", help="New label IDs (comma-separated)")
+@click.option("--members", help="New member IDs (comma-separated)")
+@click.option("--assignees", help="New assignee IDs (comma-separated)")
+@click.option("--requested-by", help="New requestedBy value")
+@click.option("--assigned-by", help="New assignedBy value")
+@click.option("--due-at", help="New due date")
+@click.option("--start-at", help="New start date")
+@click.option("--end-at", help="New end date")
+@click.option("--received-at", help="New received date")
+@click.option("--spent-time", help="New spent time")
+@click.option("--is-over-time", type=bool, help="Is over time")
+@click.option("--archive", help="Archive value")
+@click.option("--swimlane-id", help="New swimlane ID")
+@click.option("--list-id", "new_list_id", help="New list ID (move card)")
+@click.option("--sort", help="New sort value")
+@click.option("--parent-id", help="New parent card ID")
+@click.option("--author-id", help="New author ID")
+@click.option("--url", help="WeKan instance URL")
+@click.option("--username", help="Username for authentication")
+@click.option("--password", help="Password for authentication", hide_input=True)
+@click.option("--token", help="Authentication token")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "pretty", "simple"]),
+    default="json",
+    help="Output format",
+)
+@handle_errors
+@with_client_login
+def edit_card(
+    client: WeKanClient, board_id, list_id, card_id, output_format, **options
+):
+    """Edit a card's fields. Only provided options are sent."""
+    field_map = {
+        "title": "title",
+        "description": "description",
+        "color": "color",
+        "label_ids": "labelIds",
+        "members": "members",
+        "assignees": "assignees",
+        "requested_by": "requestedBy",
+        "assigned_by": "assignedBy",
+        "due_at": "dueAt",
+        "start_at": "startAt",
+        "end_at": "endAt",
+        "received_at": "receivedAt",
+        "spent_time": "spentTime",
+        "is_over_time": "isOverTime",
+        "archive": "archive",
+        "swimlane_id": "swimlaneId",
+        "new_list_id": "listId",
+        "sort": "sort",
+        "parent_id": "parentId",
+        "author_id": "authorId",
+    }
+    kwargs = {}
+    for opt_key, api_key in field_map.items():
+        val = options.get(opt_key)
+        if val is not None:
+            kwargs[api_key] = val
+    if not kwargs:
+        click.echo("Error: No fields to update. Provide at least one option.", err=True)
+        sys.exit(1)
+    result = client.edit_card(board_id, list_id, card_id, **kwargs)
+    click.echo(format_output(result, output_format))
+
+
+@main.command()
+@click.argument("board_id")
+@click.argument("list_id")
+@click.argument("card_id")
+@click.option("--url", help="WeKan instance URL")
+@click.option("--username", help="Username for authentication")
+@click.option("--password", help="Password for authentication", hide_input=True)
+@click.option("--token", help="Authentication token")
+@handle_errors
+@with_client_login
+def delete_card(client: WeKanClient, board_id, list_id, card_id):
+    """Delete a card"""
+    client.delete_card(board_id, list_id, card_id)
+    click.echo("Card deleted.", err=True)
+
+
+@main.command()
+@click.argument("board_id")
+@click.argument("swimlane_id")
+@click.option("--url", help="WeKan instance URL")
+@click.option("--username", help="Username for authentication")
+@click.option("--password", help="Password for authentication", hide_input=True)
+@click.option("--token", help="Authentication token")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "pretty", "simple"]),
+    default="json",
+    help="Output format",
+)
+@handle_errors
+@with_client_login
+def swimlane_cards(client: WeKanClient, board_id, swimlane_id, output_format):
+    """List all cards in a swimlane"""
+    result = client.get_swimlane_cards(board_id, swimlane_id)
+    click.echo(format_output(result, output_format))
+
+
+@main.command()
+@click.argument("board_id")
+@click.argument("card_id")
+@click.option("--url", help="WeKan instance URL")
+@click.option("--username", help="Username for authentication")
+@click.option("--password", help="Password for authentication", hide_input=True)
+@click.option("--token", help="Authentication token")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "pretty", "simple"]),
+    default="json",
+    help="Output format",
+)
+@handle_errors
+@with_client_login
+def comments(client: WeKanClient, board_id, card_id, output_format):
+    """List all comments on a card"""
+    result = client.get_comments(board_id, card_id)
+    click.echo(format_output(result, output_format))
+
+
+@main.command()
+@click.argument("board_id")
+@click.argument("card_id")
+@click.argument("author_id")
+@click.argument("comment")
+@click.option("--url", help="WeKan instance URL")
+@click.option("--username", help="Username for authentication")
+@click.option("--password", help="Password for authentication", hide_input=True)
+@click.option("--token", help="Authentication token")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "pretty", "simple"]),
+    default="json",
+    help="Output format",
+)
+@handle_errors
+@with_client_login
+def create_comment(
+    client: WeKanClient, board_id, card_id, author_id, comment, output_format
+):
+    """Add a comment to a card"""
+    result = client.create_comment(board_id, card_id, author_id, comment)
+    click.echo(format_output(result, output_format))
+
+
+@main.command()
+@click.argument("board_id")
+@click.argument("card_id")
+@click.option("--url", help="WeKan instance URL")
+@click.option("--username", help="Username for authentication")
+@click.option("--password", help="Password for authentication", hide_input=True)
+@click.option("--token", help="Authentication token")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "pretty", "simple"]),
+    default="json",
+    help="Output format",
+)
+@handle_errors
+@with_client_login
+def checklists(client: WeKanClient, board_id, card_id, output_format):
+    """List all checklists on a card"""
+    result = client.get_checklists(board_id, card_id)
+    click.echo(format_output(result, output_format))
+
+
+@main.command()
+@click.argument("board_id")
+@click.argument("card_id")
+@click.argument("title")
+@click.option("--items", help="Comma-separated list of checklist items")
+@click.option("--url", help="WeKan instance URL")
+@click.option("--username", help="Username for authentication")
+@click.option("--password", help="Password for authentication", hide_input=True)
+@click.option("--token", help="Authentication token")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "pretty", "simple"]),
+    default="json",
+    help="Output format",
+)
+@handle_errors
+@with_client_login
+def create_checklist(
+    client: WeKanClient, board_id, card_id, title, items, output_format
+):
+    """Create a checklist on a card"""
+    result = client.create_checklist(board_id, card_id, title, items)
+    click.echo(format_output(result, output_format))
+
+
+@main.command()
+@click.argument("board_id")
+@click.argument("card_id")
+@click.argument("checklist_id")
+@click.option("--url", help="WeKan instance URL")
+@click.option("--username", help="Username for authentication")
+@click.option("--password", help="Password for authentication", hide_input=True)
+@click.option("--token", help="Authentication token")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "pretty", "simple"]),
+    default="json",
+    help="Output format",
+)
+@handle_errors
+@with_client_login
+def checklist(client: WeKanClient, board_id, card_id, checklist_id, output_format):
+    """Get details of a specific checklist"""
+    result = client.get_checklist(board_id, card_id, checklist_id)
     click.echo(format_output(result, output_format))
 
 

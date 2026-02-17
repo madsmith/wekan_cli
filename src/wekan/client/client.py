@@ -11,6 +11,9 @@ from .types import (
     CardDetails,
     CardId,
     CardSummary,
+    Checklist,
+    ChecklistDetails,
+    Comment,
     List,
     LoginResponse,
     Swimlane,
@@ -280,3 +283,162 @@ class WeKanClient:
         response = self.session.post(url, json=payload, timeout=self.timeout)
         self._check_response(response)
         return CardId.model_validate(response.json())
+
+    def edit_card(
+        self, board_id: str, list_id: str, card_id: str, **kwargs
+    ) -> CardDetails:
+        """
+        Edit a card
+
+        Args:
+            board_id: ID of the board
+            list_id: ID of the list
+            card_id: ID of the card
+            **kwargs: Fields to update (title, description, color, etc.)
+
+        Returns:
+            Updated card details
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards/{card_id}"
+        response = self.session.put(url, json=kwargs, timeout=self.timeout)
+        self._check_response(response)
+        return CardDetails.model_validate(response.json())
+
+    def delete_card(self, board_id: str, list_id: str, card_id: str) -> None:
+        """
+        Delete a card
+
+        Args:
+            board_id: ID of the board
+            list_id: ID of the list
+            card_id: ID of the card
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards/{card_id}"
+        response = self.session.delete(url, timeout=self.timeout)
+        self._check_response(response)
+
+    def get_swimlane_cards(self, board_id: str, swimlane_id: str) -> list[CardSummary]:
+        """
+        Get all cards in a swimlane
+
+        Args:
+            board_id: ID of the board
+            swimlane_id: ID of the swimlane
+
+        Returns:
+            List of cards
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/swimlanes/{swimlane_id}/cards"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        return [CardSummary.model_validate(card) for card in response.json()]
+
+    def get_card_by_id(self, card_id: str) -> CardDetails:
+        """
+        Get card details by card ID only
+
+        Args:
+            card_id: ID of the card
+
+        Returns:
+            Card details
+        """
+        url = f"{self.base_url}/api/cards/{card_id}"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        return CardDetails.model_validate(response.json())
+
+    def get_comments(self, board_id: str, card_id: str) -> list[Comment]:
+        """
+        Get all comments on a card
+
+        Args:
+            board_id: ID of the board
+            card_id: ID of the card
+
+        Returns:
+            List of comments
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/comments"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        return [Comment.model_validate(c) for c in response.json()]
+
+    def create_comment(
+        self, board_id: str, card_id: str, author_id: str, comment: str
+    ) -> Comment:
+        """
+        Add a comment to a card
+
+        Args:
+            board_id: ID of the board
+            card_id: ID of the card
+            author_id: ID of the comment author
+            comment: The comment text
+
+        Returns:
+            Created comment
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/comments"
+        payload = {"authorId": author_id, "comment": comment}
+        response = self.session.post(url, json=payload, timeout=self.timeout)
+        self._check_response(response)
+        return Comment.model_validate(response.json())
+
+    def get_checklists(self, board_id: str, card_id: str) -> list[Checklist]:
+        """
+        Get all checklists on a card
+
+        Args:
+            board_id: ID of the board
+            card_id: ID of the card
+
+        Returns:
+            List of checklists
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/checklists"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        return [Checklist.model_validate(c) for c in response.json()]
+
+    def create_checklist(
+        self, board_id: str, card_id: str, title: str, items: str | None = None
+    ) -> Checklist:
+        """
+        Create a checklist on a card
+
+        Args:
+            board_id: ID of the board
+            card_id: ID of the card
+            title: Title of the checklist
+            items: Comma-separated list of checklist items
+
+        Returns:
+            Created checklist
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/checklists"
+        payload = {"title": title}
+        if items:
+            payload["items"] = items
+        response = self.session.post(url, json=payload, timeout=self.timeout)
+        self._check_response(response)
+        return Checklist.model_validate(response.json())
+
+    def get_checklist(
+        self, board_id: str, card_id: str, checklist_id: str
+    ) -> ChecklistDetails:
+        """
+        Get details of a specific checklist
+
+        Args:
+            board_id: ID of the board
+            card_id: ID of the card
+            checklist_id: ID of the checklist
+
+        Returns:
+            Checklist details with items
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/checklists/{checklist_id}"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        return ChecklistDetails.model_validate(response.json())
