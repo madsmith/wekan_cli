@@ -36,7 +36,7 @@ Homepage = "https://github.com/madsmith/wekan_cli"
 Repository = "https://github.com/madsmith/wekan_cli"
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 include = ["wekan_cli*"]
 
 [tool.setuptools.dynamic]
