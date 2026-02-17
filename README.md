@@ -4,10 +4,10 @@ Command line client for WeKan REST API - A command-line interface for interactin
 
 ## Installation
 
-Install the package using pip:
+Install the package using uv:
 
 ```bash
-pip install -e .
+uv pip install -e .
 ```
 
 ## Quick Start
