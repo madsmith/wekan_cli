@@ -83,7 +83,7 @@ def login(url, username, password, token, output_format):
 )
 @handle_errors
 @with_client_login
-def boards(client, user_name, userid, output_format):
+def boards(client: WeKanClient, user_name, userid, output_format):
     """List all public boards or boards visible to USER_NAME or --userid."""
     if user_name:
         users = client.get_users()
@@ -93,11 +93,31 @@ def boards(client, user_name, userid, output_format):
         if not match:
             click.echo(f"Error: User '{user_name}' not found", err=True)
             sys.exit(1)
-        result = client.get_boards_for_user(match.user_id)
+        result = client.get_boards_for_user(match.userId)
     elif userid:
         result = client.get_boards_for_user(userid)
     else:
         result = client.get_boards()
+    click.echo(format_output(result, output_format))
+
+
+@main.command()
+@click.option("--url", help="WeKan instance URL")
+@click.option("--username", help="Username for authentication")
+@click.option("--password", help="Password for authentication", hide_input=True)
+@click.option("--token", help="Authentication token")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "pretty", "simple"]),
+    default="json",
+    help="Output format",
+)
+@handle_errors
+@with_client_login
+def users(client: WeKanClient, output_format):
+    """List all users"""
+    result = client.get_users()
     click.echo(format_output(result, output_format))
 
 
@@ -116,7 +136,7 @@ def boards(client, user_name, userid, output_format):
 )
 @handle_errors
 @with_client_login
-def board(client, board_id, output_format):
+def board(client: WeKanClient, board_id, output_format):
     """Get details of a specific board"""
     result = client.get_board(board_id)
     click.echo(format_output(result, output_format))
@@ -137,7 +157,7 @@ def board(client, board_id, output_format):
 )
 @handle_errors
 @with_client_login
-def lists(client, board_id, output_format):
+def lists(client: WeKanClient, board_id, output_format):
     """List all lists in a board"""
     result = client.get_lists(board_id)
     click.echo(format_output(result, output_format))
@@ -159,7 +179,7 @@ def lists(client, board_id, output_format):
 )
 @handle_errors
 @with_client_login
-def cards(client, board_id, list_id, output_format):
+def cards(client: WeKanClient, board_id, list_id, output_format):
     """List all cards in a list"""
     result = client.get_cards(board_id, list_id)
     click.echo(format_output(result, output_format))
@@ -180,7 +200,7 @@ def cards(client, board_id, list_id, output_format):
 )
 @handle_errors
 @with_client_login
-def create_board(client, title, output_format):
+def create_board(client: WeKanClient, title, output_format):
     """Create a new board"""
     result = client.create_board(title)
     click.echo(format_output(result, output_format))
@@ -202,7 +222,7 @@ def create_board(client, title, output_format):
 )
 @handle_errors
 @with_client_login
-def create_list(client, board_id, title, output_format):
+def create_list(client: WeKanClient, board_id, title, output_format):
     """Create a new list in a board"""
     result = client.create_list(board_id, title)
     click.echo(format_output(result, output_format))
@@ -226,7 +246,9 @@ def create_list(client, board_id, title, output_format):
 )
 @handle_errors
 @with_client_login
-def create_card(client, board_id, list_id, title, description, output_format):
+def create_card(
+    client: WeKanClient, board_id, list_id, title, description, output_format
+):
     """Create a new card in a list"""
     result = client.create_card(board_id, list_id, title, description)
     click.echo(format_output(result, output_format))

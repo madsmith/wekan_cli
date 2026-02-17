@@ -4,7 +4,7 @@ WeKan REST API client module
 
 import requests
 
-from .types import APIError, Board, Card, List, LoginResponse, User
+from .types import APIError, BoardDetails, BoardListing, Card, List, LoginResponse, User
 
 
 class WeKanAPIError(Exception):
@@ -24,7 +24,6 @@ class WeKanClient:
         try:
             data = response.json()
             if "error" in data:
-                print("Error: ", data)
                 raise WeKanAPIError(APIError.model_validate(data))
         except (ValueError, KeyError):
             pass
@@ -93,7 +92,7 @@ class WeKanClient:
         self._check_response(response)
         return [User.model_validate(user) for user in response.json()]
 
-    def get_boards(self) -> list[Board]:
+    def get_boards(self) -> list[BoardListing]:
         """
         Get all boards accessible to the user
 
@@ -103,9 +102,9 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
-        return [Board.model_validate(board) for board in response.json()]
+        return [BoardListing.model_validate(board) for board in response.json()]
 
-    def get_boards_for_user(self, user_id: str) -> list[Board]:
+    def get_boards_for_user(self, user_id: str) -> list[BoardListing]:
         """
         Get all boards accessible to a specific user
 
@@ -118,9 +117,9 @@ class WeKanClient:
         url = f"{self.base_url}/api/users/{user_id}/boards"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
-        return [Board.model_validate(board) for board in response.json()]
+        return [BoardListing.model_validate(board) for board in response.json()]
 
-    def get_board(self, board_id: str) -> Board:
+    def get_board(self, board_id: str) -> BoardDetails:
         """
         Get details of a specific board
 
@@ -133,7 +132,7 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards/{board_id}"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
-        return Board.model_validate(response.json())
+        return BoardDetails.model_validate(response.json())
 
     def get_lists(self, board_id: str) -> list[List]:
         """
@@ -166,7 +165,7 @@ class WeKanClient:
         self._check_response(response)
         return [Card.model_validate(card) for card in response.json()]
 
-    def create_board(self, title: str, **kwargs) -> Board:
+    def create_board(self, title: str, **kwargs) -> BoardListing:
         """
         Create a new board
 
@@ -181,7 +180,7 @@ class WeKanClient:
         payload = {"title": title, **kwargs}
         response = self.session.post(url, json=payload, timeout=self.timeout)
         self._check_response(response)
-        return Board.model_validate(response.json())
+        return BoardListing.model_validate(response.json())
 
     def create_list(self, board_id: str, title: str) -> List:
         """

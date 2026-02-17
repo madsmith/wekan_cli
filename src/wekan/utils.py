@@ -87,7 +87,7 @@ def handle_errors(f):
             api_error = e.error
             click.echo(f"Error: {api_error}", err=True)
         except ValidationError as e:
-            click.echo(f"Error: API returned invalid response", err=True)
+            click.echo("Error: API returned invalid response", err=True)
         except Exception as e:
             click.echo(f"Error: {e} {type(e).__name__}", err=True)
             sys.exit(1)

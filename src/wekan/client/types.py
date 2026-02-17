@@ -17,27 +17,39 @@ class APIError(WeKanModel):
 
 
 class User(WeKanModel):
-    user_id: str = Field(validation_alias="_id")
+    userId: str = Field(validation_alias="_id")
     username: str
 
 
 class LoginResponse(WeKanModel):
-    user_id: str = Field(validation_alias="id")
+    userId: str = Field(validation_alias="id")
     token: str
     tokenExpires: str
 
 
-class Board(WeKanModel):
-    board_id: str = Field(validation_alias="_id")
+class Label(WeKanModel):
+    labelId: str = Field(validation_alias="_id")
+    name: str
+    color: str
+
+
+class BoardListing(WeKanModel):
+    boardId: str = Field(validation_alias="_id")
     title: str
 
 
+class BoardDetails(WeKanModel):
+    boardId: str = Field(validation_alias="_id")
+    title: str
+    labels: list[Label] | None = None
+
+
 class List(WeKanModel):
-    list_id: str = Field(validation_alias="_id")
+    listId: str = Field(validation_alias="_id")
     title: str
 
 
 class Card(WeKanModel):
-    card_id: str = Field(validation_alias="_id")
+    cardId: str = Field(validation_alias="_id")
     title: str
     description: str | None = None

@@ -1,13 +1,25 @@
 from .client import WeKanAPIError, WeKanClient
-from .types import APIError, Board, Card, List, LoginResponse, User, WeKanModel
+from .types import (
+    APIError,
+    BoardDetails,
+    BoardListing,
+    Card,
+    Label,
+    List,
+    LoginResponse,
+    User,
+    WeKanModel,
+)
 
 __all__ = [
     "WeKanAPIError",
     "WeKanClient",
     "APIError",
     "WeKanModel",
-    "Board",
+    "BoardDetails",
+    "BoardListing",
     "Card",
+    "Label",
     "List",
     "LoginResponse",
     "User",
