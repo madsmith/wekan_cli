@@ -8,7 +8,7 @@ import click
 
 from . import __version__
 from .client import WeKanClient
-from .utils import format_output, resolve_env
+from .utils import format_output, handle_errors, resolve_env
 
 
 def get_client(
@@ -74,6 +74,7 @@ def main():
     default="json",
     help="Output format",
 )
+@handle_errors
 def login(url, username, password, token, output_format):
     """Login to WeKan and get authentication token"""
     if token:
@@ -94,19 +95,8 @@ def login(url, username, password, token, output_format):
 
     client = get_client(url, username, password, None)
 
-    try:
-        result = client.login()
-        click.echo(format_output(result, output_format))
-
-        if result.token:
-            click.echo(f"\nAuthentication token: {result.token}", err=True)
-            click.echo(
-                "Set WEKAN_TOKEN environment variable to use this token:", err=True
-            )
-            click.echo(f"export WEKAN_TOKEN={result.token}", err=True)
-    except Exception as e:
-        click.echo(f"Error: {str(e)}", err=True)
-        sys.exit(1)
+    result = client.login()
+    click.echo(format_output(result, output_format))
 
 
 @main.command()
@@ -121,19 +111,16 @@ def login(url, username, password, token, output_format):
     default="json",
     help="Output format",
 )
+@handle_errors
 def boards(url, username, password, token, output_format):
     """List all boards"""
     client = get_client(url, username, password, token)
 
-    try:
-        if not token and username and password:
-            client.login()
+    if not token and username and password:
+        client.login()
 
-        result = client.get_boards()
-        click.echo(format_output(result, output_format))
-    except Exception as e:
-        click.echo(f"Error: {str(e)}", err=True)
-        sys.exit(1)
+    result = client.get_boards()
+    click.echo(format_output(result, output_format))
 
 
 @main.command()
@@ -149,19 +136,16 @@ def boards(url, username, password, token, output_format):
     default="json",
     help="Output format",
 )
+@handle_errors
 def board(board_id, url, username, password, token, output_format):
     """Get details of a specific board"""
     client = get_client(url, username, password, token)
 
-    try:
-        if not token and username and password:
-            client.login()
+    if not token and username and password:
+        client.login()
 
-        result = client.get_board(board_id)
-        click.echo(format_output(result, output_format))
-    except Exception as e:
-        click.echo(f"Error: {str(e)}", err=True)
-        sys.exit(1)
+    result = client.get_board(board_id)
+    click.echo(format_output(result, output_format))
 
 
 @main.command()
@@ -177,19 +161,16 @@ def board(board_id, url, username, password, token, output_format):
     default="json",
     help="Output format",
 )
+@handle_errors
 def lists(board_id, url, username, password, token, output_format):
     """List all lists in a board"""
     client = get_client(url, username, password, token)
 
-    try:
-        if not token and username and password:
-            client.login()
+    if not token and username and password:
+        client.login()
 
-        result = client.get_lists(board_id)
-        click.echo(format_output(result, output_format))
-    except Exception as e:
-        click.echo(f"Error: {str(e)}", err=True)
-        sys.exit(1)
+    result = client.get_lists(board_id)
+    click.echo(format_output(result, output_format))
 
 
 @main.command()
@@ -206,19 +187,16 @@ def lists(board_id, url, username, password, token, output_format):
     default="json",
     help="Output format",
 )
+@handle_errors
 def cards(board_id, list_id, url, username, password, token, output_format):
     """List all cards in a list"""
     client = get_client(url, username, password, token)
 
-    try:
-        if not token and username and password:
-            client.login()
+    if not token and username and password:
+        client.login()
 
-        result = client.get_cards(board_id, list_id)
-        click.echo(format_output(result, output_format))
-    except Exception as e:
-        click.echo(f"Error: {str(e)}", err=True)
-        sys.exit(1)
+    result = client.get_cards(board_id, list_id)
+    click.echo(format_output(result, output_format))
 
 
 @main.command()
@@ -234,19 +212,16 @@ def cards(board_id, list_id, url, username, password, token, output_format):
     default="json",
     help="Output format",
 )
+@handle_errors
 def create_board(title, url, username, password, token, output_format):
     """Create a new board"""
     client = get_client(url, username, password, token)
 
-    try:
-        if not token and username and password:
-            client.login()
+    if not token and username and password:
+        client.login()
 
-        result = client.create_board(title)
-        click.echo(format_output(result, output_format))
-    except Exception as e:
-        click.echo(f"Error: {str(e)}", err=True)
-        sys.exit(1)
+    result = client.create_board(title)
+    click.echo(format_output(result, output_format))
 
 
 @main.command()
@@ -263,19 +238,16 @@ def create_board(title, url, username, password, token, output_format):
     default="json",
     help="Output format",
 )
+@handle_errors
 def create_list(board_id, title, url, username, password, token, output_format):
     """Create a new list in a board"""
     client = get_client(url, username, password, token)
 
-    try:
-        if not token and username and password:
-            client.login()
+    if not token and username and password:
+        client.login()
 
-        result = client.create_list(board_id, title)
-        click.echo(format_output(result, output_format))
-    except Exception as e:
-        click.echo(f"Error: {str(e)}", err=True)
-        sys.exit(1)
+    result = client.create_list(board_id, title)
+    click.echo(format_output(result, output_format))
 
 
 @main.command()
@@ -294,21 +266,18 @@ def create_list(board_id, title, url, username, password, token, output_format):
     default="json",
     help="Output format",
 )
+@handle_errors
 def create_card(
     board_id, list_id, title, description, url, username, password, token, output_format
 ):
     """Create a new card in a list"""
     client = get_client(url, username, password, token)
 
-    try:
-        if not token and username and password:
-            client.login()
+    if not token and username and password:
+        client.login()
 
-        result = client.create_card(board_id, list_id, title, description)
-        click.echo(format_output(result, output_format))
-    except Exception as e:
-        click.echo(f"Error: {str(e)}", err=True)
-        sys.exit(1)
+    result = client.create_card(board_id, list_id, title, description)
+    click.echo(format_output(result, output_format))
 
 
 if __name__ == "__main__":

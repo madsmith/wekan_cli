@@ -2,8 +2,12 @@
 Utility functions for WeKan CLI.
 """
 
+import functools
 import json
 import os
+import sys
+
+import click
 
 
 def _to_serializable(data):
@@ -67,3 +71,17 @@ def format_output(data, format_type: str = "json", indent_level: int = 0):
 def resolve_env(value: str | None, key: str) -> str | None:
     """Return value if specified, otherwise os.getenv('WEKAN_{key}')."""
     return value or os.getenv(f"WEKAN_{key}")
+
+
+def handle_errors(f):
+    """Decorator that catches exceptions, prints to stderr, and exits."""
+
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            click.echo(f"Error: {e}", err=True)
+            sys.exit(1)
+
+    return wrapper
