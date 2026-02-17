@@ -6,6 +6,7 @@ import json
 import os
 import sys
 from typing import Optional
+from . import __version__
 from .client import WeKanClient
 
 
@@ -85,7 +86,7 @@ def get_client(base_url: Optional[str], username: Optional[str],
 
 
 @click.group()
-@click.version_option(version='0.1.0')
+@click.version_option(version=__version__)
 def main():
     """
     WeKan CLI - Command line interface for WeKan REST API

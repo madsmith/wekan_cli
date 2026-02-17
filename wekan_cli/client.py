@@ -9,7 +9,8 @@ class WeKanClient:
     """Client for interacting with WeKan REST API"""
     
     def __init__(self, base_url: str, username: Optional[str] = None, 
-                 password: Optional[str] = None, token: Optional[str] = None):
+                 password: Optional[str] = None, token: Optional[str] = None,
+                 timeout: int = 30):
         """
         Initialize WeKan client
         
@@ -18,11 +19,13 @@ class WeKanClient:
             username: Username for authentication
             password: Password for authentication
             token: Authentication token (alternative to username/password)
+            timeout: Request timeout in seconds (default: 30)
         """
         self.base_url = base_url.rstrip('/')
         self.username = username
         self.password = password
         self.token = token
+        self.timeout = timeout
         self.session = requests.Session()
         
         if token:
@@ -44,7 +47,7 @@ class WeKanClient:
             "password": self.password
         }
         
-        response = self.session.post(url, json=payload)
+        response = self.session.post(url, json=payload, timeout=self.timeout)
         response.raise_for_status()
         
         data = response.json()
@@ -62,7 +65,7 @@ class WeKanClient:
             List of boards
         """
         url = f"{self.base_url}/api/boards"
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=self.timeout)
         response.raise_for_status()
         return response.json()
     
@@ -77,7 +80,7 @@ class WeKanClient:
             Board details
         """
         url = f"{self.base_url}/api/boards/{board_id}"
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=self.timeout)
         response.raise_for_status()
         return response.json()
     
@@ -92,7 +95,7 @@ class WeKanClient:
             List of lists in the board
         """
         url = f"{self.base_url}/api/boards/{board_id}/lists"
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=self.timeout)
         response.raise_for_status()
         return response.json()
     
@@ -108,7 +111,7 @@ class WeKanClient:
             List of cards
         """
         url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards"
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=self.timeout)
         response.raise_for_status()
         return response.json()
     
@@ -125,7 +128,7 @@ class WeKanClient:
         """
         url = f"{self.base_url}/api/boards"
         payload = {"title": title, **kwargs}
-        response = self.session.post(url, json=payload)
+        response = self.session.post(url, json=payload, timeout=self.timeout)
         response.raise_for_status()
         return response.json()
     
@@ -142,7 +145,7 @@ class WeKanClient:
         """
         url = f"{self.base_url}/api/boards/{board_id}/lists"
         payload = {"title": title}
-        response = self.session.post(url, json=payload)
+        response = self.session.post(url, json=payload, timeout=self.timeout)
         response.raise_for_status()
         return response.json()
     
@@ -166,6 +169,6 @@ class WeKanClient:
         if description:
             payload["description"] = description
         
-        response = self.session.post(url, json=payload)
+        response = self.session.post(url, json=payload, timeout=self.timeout)
         response.raise_for_status()
         return response.json()
