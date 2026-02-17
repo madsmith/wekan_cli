@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wekan-cli"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Command line client for WeKan REST API"
 readme = "README.md"
 license = {text = "MIT"}
@@ -38,3 +38,6 @@ Repository = "https://github.com/madsmith/wekan_cli"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["wekan_cli*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "wekan_cli.__version__"}
