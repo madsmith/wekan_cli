@@ -3,7 +3,6 @@ WeKan REST API client module
 """
 import requests
 from typing import Dict, Any, Optional
-import json
 
 
 class WeKanClient:
