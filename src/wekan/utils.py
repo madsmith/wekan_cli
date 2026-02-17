@@ -8,8 +8,9 @@ import os
 import sys
 
 import click
+from pydantic import ValidationError
 
-from .client import WeKanClient
+from .client import WeKanAPIError, WeKanClient
 
 
 def _to_serializable(data):
@@ -82,8 +83,13 @@ def handle_errors(f):
     def wrapper(*args, **kwargs):
         try:
             return f(*args, **kwargs)
+        except WeKanAPIError as e:
+            api_error = e.error
+            click.echo(f"Error: {api_error}", err=True)
+        except ValidationError as e:
+            click.echo(f"Error: API returned invalid response", err=True)
         except Exception as e:
-            click.echo(f"Error: {e}", err=True)
+            click.echo(f"Error: {e} {type(e).__name__}", err=True)
             sys.exit(1)
 
     return wrapper

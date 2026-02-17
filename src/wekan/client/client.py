@@ -4,11 +4,31 @@ WeKan REST API client module
 
 import requests
 
-from .types import Board, Card, List, LoginResponse
+from .types import APIError, Board, Card, List, LoginResponse
+
+
+class WeKanAPIError(Exception):
+    """Raised when the WeKan API returns an error response."""
+
+    def __init__(self, error: APIError):
+        self.error = error
+        super().__init__(error.message)
 
 
 class WeKanClient:
     """Client for interacting with WeKan REST API"""
+
+    @staticmethod
+    def _check_response(response: requests.Response) -> None:
+        """Raise WeKanApiError if the response contains an API error."""
+        try:
+            data = response.json()
+            if "error" in data:
+                print("Error: ", data)
+                raise WeKanAPIError(APIError.model_validate(data))
+        except (ValueError, KeyError):
+            pass
+        response.raise_for_status()
 
     def __init__(
         self,
@@ -52,7 +72,7 @@ class WeKanClient:
         payload = {"username": self.username, "password": self.password}
 
         response = self.session.post(url, json=payload, timeout=self.timeout)
-        response.raise_for_status()
+        self._check_response(response)
 
         result = LoginResponse.model_validate(response.json())
         if result.token:
@@ -70,7 +90,7 @@ class WeKanClient:
         """
         url = f"{self.base_url}/api/boards"
         response = self.session.get(url, timeout=self.timeout)
-        response.raise_for_status()
+        self._check_response(response)
         return [Board.model_validate(board) for board in response.json()]
 
     def get_board(self, board_id: str) -> Board:
@@ -85,7 +105,7 @@ class WeKanClient:
         """
         url = f"{self.base_url}/api/boards/{board_id}"
         response = self.session.get(url, timeout=self.timeout)
-        response.raise_for_status()
+        self._check_response(response)
         return Board.model_validate(response.json())
 
     def get_lists(self, board_id: str) -> list[List]:
@@ -100,7 +120,7 @@ class WeKanClient:
         """
         url = f"{self.base_url}/api/boards/{board_id}/lists"
         response = self.session.get(url, timeout=self.timeout)
-        response.raise_for_status()
+        self._check_response(response)
         return [List.model_validate(list) for list in response.json()]
 
     def get_cards(self, board_id: str, list_id: str) -> list[Card]:
@@ -116,7 +136,7 @@ class WeKanClient:
         """
         url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards"
         response = self.session.get(url, timeout=self.timeout)
-        response.raise_for_status()
+        self._check_response(response)
         return [Card.model_validate(card) for card in response.json()]
 
     def create_board(self, title: str, **kwargs) -> Board:
@@ -133,7 +153,7 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards"
         payload = {"title": title, **kwargs}
         response = self.session.post(url, json=payload, timeout=self.timeout)
-        response.raise_for_status()
+        self._check_response(response)
         return Board.model_validate(response.json())
 
     def create_list(self, board_id: str, title: str) -> List:
@@ -150,7 +170,7 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards/{board_id}/lists"
         payload = {"title": title}
         response = self.session.post(url, json=payload, timeout=self.timeout)
-        response.raise_for_status()
+        self._check_response(response)
         return List.model_validate(response.json())
 
     def create_card(
@@ -180,5 +200,5 @@ class WeKanClient:
             payload["description"] = description
 
         response = self.session.post(url, json=payload, timeout=self.timeout)
-        response.raise_for_status()
+        self._check_response(response)
         return Card.model_validate(response.json())

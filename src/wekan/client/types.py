@@ -9,6 +9,13 @@ class WeKanModel(BaseModel):
     model_config = ConfigDict(extra="allow", populate_by_name=True)
 
 
+class APIError(WeKanModel):
+    error: str
+    reason: str
+    message: str
+    statusCode: int
+
+
 class LoginResponse(WeKanModel):
     user_id: str = Field(validation_alias="id")
     token: str
