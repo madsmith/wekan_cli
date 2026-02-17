@@ -48,7 +48,8 @@ def login(url, username, password, token, output_format):
         click.echo("Token provided, no need to login", err=True)
         return
 
-    if not resolve_env(url, "URL"):
+    url = resolve_env(url, "URL")
+    if not url:
         click.echo(
             "Error: WeKan URL is required. Provide via --url or WEKAN_URL environment variable.",
             err=True,
@@ -60,7 +61,6 @@ def login(url, username, password, token, output_format):
     if not password:
         password = click.prompt("Password", hide_input=True)
 
-    url = resolve_env(url, "URL")
     client = WeKanClient(url, username, password)
 
     result = client.login()
