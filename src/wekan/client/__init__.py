@@ -1,5 +1,5 @@
 from .client import WeKanAPIError, WeKanClient
-from .types import APIError, Board, Card, List, LoginResponse, WeKanModel
+from .types import APIError, Board, Card, List, LoginResponse, User, WeKanModel
 
 __all__ = [
     "WeKanAPIError",
@@ -10,4 +10,5 @@ __all__ = [
     "Card",
     "List",
     "LoginResponse",
+    "User",
 ]

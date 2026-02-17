@@ -16,6 +16,11 @@ class APIError(WeKanModel):
     statusCode: int
 
 
+class User(WeKanModel):
+    user_id: str = Field(validation_alias="_id")
+    username: str
+
+
 class LoginResponse(WeKanModel):
     user_id: str = Field(validation_alias="id")
     token: str

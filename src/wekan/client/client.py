@@ -4,7 +4,7 @@ WeKan REST API client module
 
 import requests
 
-from .types import APIError, Board, Card, List, LoginResponse
+from .types import APIError, Board, Card, List, LoginResponse, User
 
 
 class WeKanAPIError(Exception):
@@ -81,6 +81,18 @@ class WeKanClient:
 
         return result
 
+    def get_users(self) -> list[User]:
+        """
+        Get all users
+
+        Returns:
+            List of users
+        """
+        url = f"{self.base_url}/api/users"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        return [User.model_validate(user) for user in response.json()]
+
     def get_boards(self) -> list[Board]:
         """
         Get all boards accessible to the user
@@ -89,6 +101,21 @@ class WeKanClient:
             List of boards
         """
         url = f"{self.base_url}/api/boards"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        return [Board.model_validate(board) for board in response.json()]
+
+    def get_boards_for_user(self, user_id: str) -> list[Board]:
+        """
+        Get all boards accessible to a specific user
+
+        Args:
+            user_id: ID of the user
+
+        Returns:
+            List of boards accessible to the user
+        """
+        url = f"{self.base_url}/api/users/{user_id}/boards"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
         return [Board.model_validate(board) for board in response.json()]

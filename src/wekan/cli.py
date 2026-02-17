@@ -68,6 +68,8 @@ def login(url, username, password, token, output_format):
 
 
 @main.command()
+@click.argument("user_name", required=False)
+@click.option("--userid", help="Filter boards by user ID")
 @click.option("--url", help="WeKan instance URL")
 @click.option("--username", help="Username for authentication")
 @click.option("--password", help="Password for authentication", hide_input=True)
@@ -81,9 +83,21 @@ def login(url, username, password, token, output_format):
 )
 @handle_errors
 @with_client_login
-def boards(client, output_format):
-    """List all boards"""
-    result = client.get_boards()
+def boards(client, user_name, userid, output_format):
+    """List all public boards or boards visible to USER_NAME or --userid."""
+    if user_name:
+        users = client.get_users()
+        match = next(
+            (u for u in users if u.username.lower() == user_name.lower()), None
+        )
+        if not match:
+            click.echo(f"Error: User '{user_name}' not found", err=True)
+            sys.exit(1)
+        result = client.get_boards_for_user(match.user_id)
+    elif userid:
+        result = client.get_boards_for_user(userid)
+    else:
+        result = client.get_boards()
     click.echo(format_output(result, output_format))
 
 
