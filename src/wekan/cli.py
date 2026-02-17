@@ -207,6 +207,29 @@ def cards(client: WeKanClient, board_id, list_id, output_format):
 
 
 @main.command()
+@click.argument("board_id")
+@click.argument("list_id")
+@click.argument("card_id")
+@click.option("--url", help="WeKan instance URL")
+@click.option("--username", help="Username for authentication")
+@click.option("--password", help="Password for authentication", hide_input=True)
+@click.option("--token", help="Authentication token")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "pretty", "simple"]),
+    default="json",
+    help="Output format",
+)
+@handle_errors
+@with_client_login
+def card(client: WeKanClient, board_id, list_id, card_id, output_format):
+    """Get details of a specific card"""
+    result = client.get_card(board_id, list_id, card_id)
+    click.echo(format_output(result, output_format))
+
+
+@main.command()
 @click.argument("title")
 @click.option("--url", help="WeKan instance URL")
 @click.option("--username", help="Username for authentication")

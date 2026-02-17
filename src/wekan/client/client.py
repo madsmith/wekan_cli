@@ -8,8 +8,9 @@ from .types import (
     APIError,
     BoardDetails,
     BoardListing,
-    Card,
+    CardDetails,
     CardId,
+    CardSummary,
     List,
     LoginResponse,
     Swimlane,
@@ -174,7 +175,7 @@ class WeKanClient:
         self._check_response(response)
         return [Swimlane.model_validate(s) for s in response.json()]
 
-    def get_cards(self, board_id: str, list_id: str) -> list[Card]:
+    def get_cards(self, board_id: str, list_id: str) -> list[CardSummary]:
         """
         Get all cards in a list
 
@@ -188,7 +189,24 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
-        return [Card.model_validate(card) for card in response.json()]
+        return [CardSummary.model_validate(card) for card in response.json()]
+
+    def get_card(self, board_id: str, list_id: str, card_id: str) -> CardDetails:
+        """
+        Get details of a specific card
+
+        Args:
+            board_id: ID of the board
+            list_id: ID of the list
+            card_id: ID of the card
+
+        Returns:
+            Card details
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards/{card_id}"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        return CardDetails.model_validate(response.json())
 
     def create_board(self, title: str, **kwargs) -> BoardListing:
         """

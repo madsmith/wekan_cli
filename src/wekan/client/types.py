@@ -58,6 +58,11 @@ class CardId(WeKanModel):
     cardId: str = Field(validation_alias="_id")
 
 
-class Card(CardId):
+class CardSummary(CardId):
+    title: str
+    description: str | None = None
+
+
+class CardDetails(CardId):
     title: str
     description: str | None = None
