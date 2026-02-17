@@ -8,40 +8,7 @@ import click
 
 from . import __version__
 from .client import WeKanClient
-from .utils import format_output, handle_errors, resolve_env
-
-
-def get_client(
-    base_url: str | None,
-    username: str | None,
-    password: str | None,
-    token: str | None,
-) -> WeKanClient:
-    """
-    Create and return a WeKan client instance
-
-    Args:
-        base_url: Base URL of WeKan instance
-        username: Username for authentication
-        password: Password for authentication
-        token: Authentication token
-
-    Returns:
-        WeKanClient instance
-    """
-    base_url = resolve_env(base_url, "URL")
-    username = resolve_env(username, "USERNAME")
-    password = resolve_env(password, "PASSWORD")
-    token = resolve_env(token, "TOKEN")
-
-    if not base_url:
-        click.echo(
-            "Error: WeKan URL is required. Provide via --url or WEKAN_URL environment variable.",
-            err=True,
-        )
-        sys.exit(1)
-
-    return WeKanClient(base_url, username, password, token)
+from .utils import format_output, handle_errors, resolve_env, with_client_login
 
 
 @click.group()
@@ -93,7 +60,8 @@ def login(url, username, password, token, output_format):
     if not password:
         password = click.prompt("Password", hide_input=True)
 
-    client = get_client(url, username, password, None)
+    url = resolve_env(url, "URL")
+    client = WeKanClient(url, username, password)
 
     result = client.login()
     click.echo(format_output(result, output_format))
@@ -112,13 +80,9 @@ def login(url, username, password, token, output_format):
     help="Output format",
 )
 @handle_errors
-def boards(url, username, password, token, output_format):
+@with_client_login
+def boards(client, output_format):
     """List all boards"""
-    client = get_client(url, username, password, token)
-
-    if not token and username and password:
-        client.login()
-
     result = client.get_boards()
     click.echo(format_output(result, output_format))
 
@@ -137,13 +101,9 @@ def boards(url, username, password, token, output_format):
     help="Output format",
 )
 @handle_errors
-def board(board_id, url, username, password, token, output_format):
+@with_client_login
+def board(client, board_id, output_format):
     """Get details of a specific board"""
-    client = get_client(url, username, password, token)
-
-    if not token and username and password:
-        client.login()
-
     result = client.get_board(board_id)
     click.echo(format_output(result, output_format))
 
@@ -162,13 +122,9 @@ def board(board_id, url, username, password, token, output_format):
     help="Output format",
 )
 @handle_errors
-def lists(board_id, url, username, password, token, output_format):
+@with_client_login
+def lists(client, board_id, output_format):
     """List all lists in a board"""
-    client = get_client(url, username, password, token)
-
-    if not token and username and password:
-        client.login()
-
     result = client.get_lists(board_id)
     click.echo(format_output(result, output_format))
 
@@ -188,13 +144,9 @@ def lists(board_id, url, username, password, token, output_format):
     help="Output format",
 )
 @handle_errors
-def cards(board_id, list_id, url, username, password, token, output_format):
+@with_client_login
+def cards(client, board_id, list_id, output_format):
     """List all cards in a list"""
-    client = get_client(url, username, password, token)
-
-    if not token and username and password:
-        client.login()
-
     result = client.get_cards(board_id, list_id)
     click.echo(format_output(result, output_format))
 
@@ -213,13 +165,9 @@ def cards(board_id, list_id, url, username, password, token, output_format):
     help="Output format",
 )
 @handle_errors
-def create_board(title, url, username, password, token, output_format):
+@with_client_login
+def create_board(client, title, output_format):
     """Create a new board"""
-    client = get_client(url, username, password, token)
-
-    if not token and username and password:
-        client.login()
-
     result = client.create_board(title)
     click.echo(format_output(result, output_format))
 
@@ -239,13 +187,9 @@ def create_board(title, url, username, password, token, output_format):
     help="Output format",
 )
 @handle_errors
-def create_list(board_id, title, url, username, password, token, output_format):
+@with_client_login
+def create_list(client, board_id, title, output_format):
     """Create a new list in a board"""
-    client = get_client(url, username, password, token)
-
-    if not token and username and password:
-        client.login()
-
     result = client.create_list(board_id, title)
     click.echo(format_output(result, output_format))
 
@@ -267,15 +211,9 @@ def create_list(board_id, title, url, username, password, token, output_format):
     help="Output format",
 )
 @handle_errors
-def create_card(
-    board_id, list_id, title, description, url, username, password, token, output_format
-):
+@with_client_login
+def create_card(client, board_id, list_id, title, description, output_format):
     """Create a new card in a list"""
-    client = get_client(url, username, password, token)
-
-    if not token and username and password:
-        client.login()
-
     result = client.create_card(board_id, list_id, title, description)
     click.echo(format_output(result, output_format))
 

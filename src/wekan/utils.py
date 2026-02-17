@@ -9,6 +9,8 @@ import sys
 
 import click
 
+from .client import WeKanClient
+
 
 def _to_serializable(data):
     """Convert Pydantic models to dicts for output formatting."""
@@ -83,5 +85,38 @@ def handle_errors(f):
         except Exception as e:
             click.echo(f"Error: {e}", err=True)
             sys.exit(1)
+
+    return wrapper
+
+
+def with_client_login(fn):
+    """Decorator that creates a WeKanClient from url/username/password/token
+    kwargs, performs login if needed, and passes client to the wrapped function."""
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        url = kwargs.pop("url", None)
+        username = kwargs.pop("username", None)
+        password = kwargs.pop("password", None)
+        token = kwargs.pop("token", None)
+
+        base_url = resolve_env(url, "URL")
+        username = resolve_env(username, "USERNAME")
+        password = resolve_env(password, "PASSWORD")
+        token = resolve_env(token, "TOKEN")
+
+        if not base_url:
+            click.echo(
+                "Error: WeKan URL is required. Provide via --url or WEKAN_URL environment variable.",
+                err=True,
+            )
+            sys.exit(1)
+
+        client = WeKanClient(base_url, username, password, token)
+
+        if not token and username and password:
+            client.login()
+
+        return fn(client, *args, **kwargs)
 
     return wrapper
