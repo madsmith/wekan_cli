@@ -33,7 +33,7 @@ def format_output(data, format_type: str = 'json', indent_level: int = 0):
                     result.append(f"{indent}- {nested.lstrip()}")
                 elif isinstance(item, list):
                     nested = format_output(item, 'pretty', indent_level + 1)
-                    result.append(f"{indent}- {nested}")
+                    result.append(f"{indent}- {nested.lstrip()}")
                 else:
                     result.append(f"{indent}- {item}")
             return '\n'.join(result)
