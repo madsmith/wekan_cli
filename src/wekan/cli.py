@@ -60,6 +60,11 @@ def format_output(data, format_type: str = "json", indent_level: int = 0):
         return str(data)
 
 
+def _resolve_env(value: str | None, key: str) -> str | None:
+    """Return value if specified, otherwise os.getenv('WEKAN_{key}')."""
+    return value or os.getenv(f"WEKAN_{key}")
+
+
 def get_client(
     base_url: str | None,
     username: str | None,
@@ -78,11 +83,10 @@ def get_client(
     Returns:
         WeKanClient instance
     """
-    # Get from environment variables if not provided
-    base_url = base_url or os.getenv("WEKAN_URL")
-    username = username or os.getenv("WEKAN_USERNAME")
-    password = password or os.getenv("WEKAN_PASSWORD")
-    token = token or os.getenv("WEKAN_TOKEN")
+    base_url = _resolve_env(base_url, "URL")
+    username = _resolve_env(username, "USERNAME")
+    password = _resolve_env(password, "PASSWORD")
+    token = _resolve_env(token, "TOKEN")
 
     if not base_url:
         click.echo(
@@ -129,6 +133,13 @@ def login(url, username, password, token, output_format):
     if token:
         click.echo("Token provided, no need to login", err=True)
         return
+
+    if not _resolve_env(url, "URL"):
+        click.echo(
+            "Error: WeKan URL is required. Provide via --url or WEKAN_URL environment variable.",
+            err=True,
+        )
+        sys.exit(1)
 
     if not username:
         username = click.prompt("Username")
