@@ -2,9 +2,9 @@
 WeKan REST API client module
 """
 
-from typing import Any, Dict
-
 import requests
+
+from .types import Board, Card, List, LoginResponse
 
 
 class WeKanClient:
@@ -38,7 +38,7 @@ class WeKanClient:
         if token:
             self.session.headers.update({"Authorization": f"Bearer {token}"})
 
-    def login(self) -> Dict[str, Any]:
+    def login(self) -> LoginResponse:
         """
         Login to WeKan and get authentication token
 
@@ -54,14 +54,14 @@ class WeKanClient:
         response = self.session.post(url, json=payload, timeout=self.timeout)
         response.raise_for_status()
 
-        data = response.json()
-        if "token" in data:
-            self.token = data["token"]
+        result = LoginResponse.model_validate(response.json())
+        if result.token:
+            self.token = result.token
             self.session.headers.update({"Authorization": f"Bearer {self.token}"})
 
-        return data
+        return result
 
-    def get_boards(self) -> list:
+    def get_boards(self) -> list[Board]:
         """
         Get all boards accessible to the user
 
@@ -71,9 +71,9 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards"
         response = self.session.get(url, timeout=self.timeout)
         response.raise_for_status()
-        return response.json()
+        return [Board.model_validate(board) for board in response.json()]
 
-    def get_board(self, board_id: str) -> Dict[str, Any]:
+    def get_board(self, board_id: str) -> Board:
         """
         Get details of a specific board
 
@@ -86,9 +86,9 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards/{board_id}"
         response = self.session.get(url, timeout=self.timeout)
         response.raise_for_status()
-        return response.json()
+        return Board.model_validate(response.json())
 
-    def get_lists(self, board_id: str) -> list:
+    def get_lists(self, board_id: str) -> list[List]:
         """
         Get all lists in a board
 
@@ -101,9 +101,9 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards/{board_id}/lists"
         response = self.session.get(url, timeout=self.timeout)
         response.raise_for_status()
-        return response.json()
+        return [List.model_validate(list) for list in response.json()]
 
-    def get_cards(self, board_id: str, list_id: str) -> list:
+    def get_cards(self, board_id: str, list_id: str) -> list[Card]:
         """
         Get all cards in a list
 
@@ -117,9 +117,9 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards"
         response = self.session.get(url, timeout=self.timeout)
         response.raise_for_status()
-        return response.json()
+        return [Card.model_validate(card) for card in response.json()]
 
-    def create_board(self, title: str, **kwargs) -> Dict[str, Any]:
+    def create_board(self, title: str, **kwargs) -> Board:
         """
         Create a new board
 
@@ -134,9 +134,9 @@ class WeKanClient:
         payload = {"title": title, **kwargs}
         response = self.session.post(url, json=payload, timeout=self.timeout)
         response.raise_for_status()
-        return response.json()
+        return Board.model_validate(response.json())
 
-    def create_list(self, board_id: str, title: str) -> Dict[str, Any]:
+    def create_list(self, board_id: str, title: str) -> List:
         """
         Create a new list in a board
 
@@ -151,7 +151,7 @@ class WeKanClient:
         payload = {"title": title}
         response = self.session.post(url, json=payload, timeout=self.timeout)
         response.raise_for_status()
-        return response.json()
+        return List.model_validate(response.json())
 
     def create_card(
         self,
@@ -160,7 +160,7 @@ class WeKanClient:
         title: str,
         description: str | None = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> Card:
         """
         Create a new card in a list
 
@@ -181,4 +181,4 @@ class WeKanClient:
 
         response = self.session.post(url, json=payload, timeout=self.timeout)
         response.raise_for_status()
-        return response.json()
+        return Card.model_validate(response.json())

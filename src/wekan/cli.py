@@ -2,67 +2,13 @@
 WeKan CLI - Command line interface for WeKan REST API
 """
 
-import json
-import os
 import sys
 
 import click
 
 from . import __version__
 from .client import WeKanClient
-
-
-def format_output(data, format_type: str = "json", indent_level: int = 0):
-    """
-    Format output data for display
-
-    Args:
-        data: Data to format
-        format_type: Output format (json, pretty, simple)
-        indent_level: Current indentation level for nested structures
-
-    Returns:
-        Formatted string
-    """
-    if format_type == "json":
-        return json.dumps(data, indent=2)
-    elif format_type == "pretty":
-        indent = "  " * indent_level
-        if isinstance(data, list):
-            result = []
-            for item in data:
-                if isinstance(item, dict):
-                    nested = format_output(item, "pretty", indent_level + 1)
-                    result.append(f"{indent}- {nested.lstrip()}")
-                elif isinstance(item, list):
-                    nested = format_output(item, "pretty", indent_level + 1)
-                    result.append(f"{indent}- {nested.lstrip()}")
-                else:
-                    result.append(f"{indent}- {item}")
-            return "\n".join(result)
-        elif isinstance(data, dict):
-            result = []
-            for k, v in data.items():
-                if isinstance(v, dict):
-                    result.append(f"{indent}{k}:")
-                    nested = format_output(v, "pretty", indent_level + 1)
-                    result.append(nested)
-                elif isinstance(v, list):
-                    result.append(f"{indent}{k}:")
-                    nested = format_output(v, "pretty", indent_level + 1)
-                    result.append(nested)
-                else:
-                    result.append(f"{indent}{k}: {v}")
-            return "\n".join(result)
-        else:
-            return str(data)
-    else:
-        return str(data)
-
-
-def _resolve_env(value: str | None, key: str) -> str | None:
-    """Return value if specified, otherwise os.getenv('WEKAN_{key}')."""
-    return value or os.getenv(f"WEKAN_{key}")
+from .utils import format_output, resolve_env
 
 
 def get_client(
@@ -83,10 +29,10 @@ def get_client(
     Returns:
         WeKanClient instance
     """
-    base_url = _resolve_env(base_url, "URL")
-    username = _resolve_env(username, "USERNAME")
-    password = _resolve_env(password, "PASSWORD")
-    token = _resolve_env(token, "TOKEN")
+    base_url = resolve_env(base_url, "URL")
+    username = resolve_env(username, "USERNAME")
+    password = resolve_env(password, "PASSWORD")
+    token = resolve_env(token, "TOKEN")
 
     if not base_url:
         click.echo(
@@ -134,7 +80,7 @@ def login(url, username, password, token, output_format):
         click.echo("Token provided, no need to login", err=True)
         return
 
-    if not _resolve_env(url, "URL"):
+    if not resolve_env(url, "URL"):
         click.echo(
             "Error: WeKan URL is required. Provide via --url or WEKAN_URL environment variable.",
             err=True,
@@ -152,12 +98,12 @@ def login(url, username, password, token, output_format):
         result = client.login()
         click.echo(format_output(result, output_format))
 
-        if "token" in result:
-            click.echo(f"\nAuthentication token: {result['token']}", err=True)
+        if result.token:
+            click.echo(f"\nAuthentication token: {result.token}", err=True)
             click.echo(
                 "Set WEKAN_TOKEN environment variable to use this token:", err=True
             )
-            click.echo(f"export WEKAN_TOKEN={result['token']}", err=True)
+            click.echo(f"export WEKAN_TOKEN={result.token}", err=True)
     except Exception as e:
         click.echo(f"Error: {str(e)}", err=True)
         sys.exit(1)
