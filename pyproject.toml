@@ -29,7 +29,7 @@ classifiers = [
 ]
 
 [project.scripts]
-wekancli = "wekan_cli.cli:main"
+wekancli = "wekan.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/madsmith/wekan_cli"
@@ -37,7 +37,7 @@ Repository = "https://github.com/madsmith/wekan_cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["wekan_cli*"]
+include = ["wekan*"]
 
 [tool.setuptools.dynamic]
-version = {attr = "wekan_cli.__version__"}
+version = {attr = "wekan.__version__"}
