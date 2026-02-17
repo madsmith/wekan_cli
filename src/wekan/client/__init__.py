@@ -4,9 +4,11 @@ from .types import (
     BoardDetails,
     BoardListing,
     Card,
+    CardId,
     Label,
     List,
     LoginResponse,
+    Swimlane,
     User,
     WeKanModel,
 )
@@ -19,8 +21,10 @@ __all__ = [
     "BoardDetails",
     "BoardListing",
     "Card",
+    "CardId",
     "Label",
     "List",
     "LoginResponse",
+    "Swimlane",
     "User",
 ]

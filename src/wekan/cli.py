@@ -165,6 +165,27 @@ def lists(client: WeKanClient, board_id, output_format):
 
 @main.command()
 @click.argument("board_id")
+@click.option("--url", help="WeKan instance URL")
+@click.option("--username", help="Username for authentication")
+@click.option("--password", help="Password for authentication", hide_input=True)
+@click.option("--token", help="Authentication token")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["json", "pretty", "simple"]),
+    default="json",
+    help="Output format",
+)
+@handle_errors
+@with_client_login
+def swimlanes(client: WeKanClient, board_id, output_format):
+    """List all swimlanes in a board"""
+    result = client.get_swimlanes(board_id)
+    click.echo(format_output(result, output_format))
+
+
+@main.command()
+@click.argument("board_id")
 @click.argument("list_id")
 @click.option("--url", help="WeKan instance URL")
 @click.option("--username", help="Username for authentication")
@@ -232,6 +253,8 @@ def create_list(client: WeKanClient, board_id, title, output_format):
 @click.argument("board_id")
 @click.argument("list_id")
 @click.argument("title")
+@click.argument("author_id")
+@click.argument("swimlane_id")
 @click.option("--description", help="Card description")
 @click.option("--url", help="WeKan instance URL")
 @click.option("--username", help="Username for authentication")
@@ -247,10 +270,19 @@ def create_list(client: WeKanClient, board_id, title, output_format):
 @handle_errors
 @with_client_login
 def create_card(
-    client: WeKanClient, board_id, list_id, title, description, output_format
+    client: WeKanClient,
+    board_id,
+    list_id,
+    title,
+    author_id,
+    swimlane_id,
+    description,
+    output_format,
 ):
     """Create a new card in a list"""
-    result = client.create_card(board_id, list_id, title, description)
+    result = client.create_card(
+        board_id, list_id, title, author_id, swimlane_id, description
+    )
     click.echo(format_output(result, output_format))
 
 

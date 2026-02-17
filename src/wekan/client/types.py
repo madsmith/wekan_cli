@@ -44,12 +44,20 @@ class BoardDetails(WeKanModel):
     labels: list[Label] | None = None
 
 
+class Swimlane(WeKanModel):
+    swimlaneId: str = Field(validation_alias="_id")
+    title: str
+
+
 class List(WeKanModel):
     listId: str = Field(validation_alias="_id")
     title: str
 
 
-class Card(WeKanModel):
+class CardId(WeKanModel):
     cardId: str = Field(validation_alias="_id")
+
+
+class Card(CardId):
     title: str
     description: str | None = None

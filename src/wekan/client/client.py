@@ -4,7 +4,17 @@ WeKan REST API client module
 
 import requests
 
-from .types import APIError, BoardDetails, BoardListing, Card, List, LoginResponse, User
+from .types import (
+    APIError,
+    BoardDetails,
+    BoardListing,
+    Card,
+    CardId,
+    List,
+    LoginResponse,
+    Swimlane,
+    User,
+)
 
 
 class WeKanAPIError(Exception):
@@ -149,6 +159,21 @@ class WeKanClient:
         self._check_response(response)
         return [List.model_validate(list) for list in response.json()]
 
+    def get_swimlanes(self, board_id: str) -> list[Swimlane]:
+        """
+        Get all swimlanes in a board
+
+        Args:
+            board_id: ID of the board
+
+        Returns:
+            List of swimlanes in the board
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/swimlanes"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        return [Swimlane.model_validate(s) for s in response.json()]
+
     def get_cards(self, board_id: str, list_id: str) -> list[Card]:
         """
         Get all cards in a list
@@ -204,9 +229,11 @@ class WeKanClient:
         board_id: str,
         list_id: str,
         title: str,
+        author_id: str,
+        swimlane_id: str,
         description: str | None = None,
         **kwargs,
-    ) -> Card:
+    ) -> CardId:
         """
         Create a new card in a list
 
@@ -214,6 +241,8 @@ class WeKanClient:
             board_id: ID of the board
             list_id: ID of the list
             title: Title of the card
+            author_id: ID of the card author
+            swimlane_id: ID of the swimlane
             description: Description of the card
             **kwargs: Additional card properties
 
@@ -221,10 +250,15 @@ class WeKanClient:
             Created card details
         """
         url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards"
-        payload = {"title": title, **kwargs}
+        payload = {
+            "title": title,
+            "authorId": author_id,
+            "swimlaneId": swimlane_id,
+            **kwargs,
+        }
         if description:
             payload["description"] = description
 
         response = self.session.post(url, json=payload, timeout=self.timeout)
         self._check_response(response)
-        return Card.model_validate(response.json())
+        return CardId.model_validate(response.json())
