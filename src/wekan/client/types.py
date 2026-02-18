@@ -33,13 +33,15 @@ class Label(WeKanModel):
     color: str
 
 
-class BoardListing(WeKanModel):
+class BoardId(WeKanModel):
     boardId: str = Field(validation_alias="_id")
+
+
+class BoardListing(BoardId):
     title: str
 
 
-class BoardDetails(WeKanModel):
-    boardId: str = Field(validation_alias="_id")
+class BoardDetails(BoardId):
     title: str
     labels: list[Label] | None = None
 
@@ -49,8 +51,11 @@ class Swimlane(WeKanModel):
     title: str
 
 
-class List(WeKanModel):
+class ListId(WeKanModel):
     listId: str = Field(validation_alias="_id")
+
+
+class List(ListId):
     title: str
 
 
@@ -66,27 +71,52 @@ class CardSummary(CardId):
 class CardDetails(CardId):
     title: str
     description: str | None = None
+    boardId: str
+    listId: str
+    userId: str
+    swimlaneId: str
+    archived: bool
+    sort: int
+    cardNumber: int
 
 
-class Comment(WeKanModel):
+class CommentId(WeKanModel):
     commentId: str = Field(validation_alias="_id")
+
+
+class Comment(CommentId):
     comment: str
     authorId: str
 
 
-class Checklist(WeKanModel):
+class ChecklistId(WeKanModel):
     checklistId: str = Field(validation_alias="_id")
+
+
+class Checklist(ChecklistId):
     title: str
 
 
-class ChecklistItem(WeKanModel):
+class ChecklistItemId(WeKanModel):
     checklistItemId: str = Field(validation_alias="_id")
+
+
+class ChecklistItem(ChecklistItemId):
     title: str
     isFinished: bool
 
 
-class ChecklistDetails(WeKanModel):
-    checklistId: str = Field(validation_alias="_id")
+class ChecklistItemDetails(ChecklistItemId):
+    title: str
+    sort: int | None = None
+    isFinished: bool | None = None
+    checklistId: str | None = None
+    cardId: str | None = None
+    createdAt: str | None = None
+    modifiedAt: str | None = None
+
+
+class ChecklistDetails(ChecklistId):
     cardId: str | None = None
     title: str
     finishedAt: str | None = None

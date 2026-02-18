@@ -2,23 +2,33 @@
 WeKan REST API client module
 """
 
+import os
+
 import requests
 
 from .types import (
     APIError,
     BoardDetails,
+    BoardId,
     BoardListing,
     CardDetails,
     CardId,
     CardSummary,
     Checklist,
     ChecklistDetails,
+    ChecklistId,
+    ChecklistItemDetails,
+    ChecklistItemId,
     Comment,
+    CommentId,
     List,
+    ListId,
     LoginResponse,
     Swimlane,
     User,
 )
+
+DEBUG = os.getenv("WEKAN_DEBUG", False)
 
 
 class WeKanAPIError(Exception):
@@ -36,6 +46,8 @@ class WeKanClient:
     def _check_response(response: requests.Response) -> None:
         """Raise WeKanApiError if the response contains an API error."""
         try:
+            if DEBUG:
+                print(response.content)
             data = response.json()
             if "error" in data:
                 raise WeKanAPIError(APIError.model_validate(data))
@@ -211,24 +223,25 @@ class WeKanClient:
         self._check_response(response)
         return CardDetails.model_validate(response.json())
 
-    def create_board(self, title: str, **kwargs) -> BoardListing:
+    def create_board(self, title: str, owner_id: str, **kwargs) -> BoardId:
         """
         Create a new board
 
         Args:
             title: Title of the board
+            owner_id: ID of the owner
             **kwargs: Additional board properties
 
         Returns:
-            Created board details
+            Created board ID
         """
         url = f"{self.base_url}/api/boards"
-        payload = {"title": title, **kwargs}
+        payload = {"title": title, "owner": owner_id, **kwargs}
         response = self.session.post(url, json=payload, timeout=self.timeout)
         self._check_response(response)
-        return BoardListing.model_validate(response.json())
+        return BoardId.model_validate(response.json())
 
-    def create_list(self, board_id: str, title: str) -> List:
+    def create_list(self, board_id: str, title: str) -> ListId:
         """
         Create a new list in a board
 
@@ -237,13 +250,13 @@ class WeKanClient:
             title: Title of the list
 
         Returns:
-            Created list details
+            Created list ID
         """
         url = f"{self.base_url}/api/boards/{board_id}/lists"
         payload = {"title": title}
         response = self.session.post(url, json=payload, timeout=self.timeout)
         self._check_response(response)
-        return List.model_validate(response.json())
+        return ListId.model_validate(response.json())
 
     def create_card(
         self,
@@ -284,9 +297,7 @@ class WeKanClient:
         self._check_response(response)
         return CardId.model_validate(response.json())
 
-    def edit_card(
-        self, board_id: str, list_id: str, card_id: str, **kwargs
-    ) -> CardDetails:
+    def edit_card(self, board_id: str, list_id: str, card_id: str, **kwargs) -> CardId:
         """
         Edit a card
 
@@ -299,10 +310,24 @@ class WeKanClient:
         Returns:
             Updated card details
         """
+
+        previous_card = self.get_card(board_id, list_id, card_id)
+
+        if "newBoardId" not in kwargs:
+            kwargs["newBoardId"] = board_id
+        if "newListId" not in kwargs:
+            kwargs["newListId"] = list_id
+        if "newSwimlaneId" not in kwargs:
+            kwargs["newSwimlaneId"] = previous_card.swimlaneId
+        # Archive is listed as a required arg but the code does not require it
+        # Leaving this commented out for now
+        # if "archive" not in kwargs:
+        #    kwargs["archive"] = False
+
         url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards/{card_id}"
         response = self.session.put(url, json=kwargs, timeout=self.timeout)
         self._check_response(response)
-        return CardDetails.model_validate(response.json())
+        return CardId.model_validate(response.json())
 
     def delete_card(self, board_id: str, list_id: str, card_id: str) -> None:
         """
@@ -366,7 +391,7 @@ class WeKanClient:
 
     def create_comment(
         self, board_id: str, card_id: str, author_id: str, comment: str
-    ) -> Comment:
+    ) -> CommentId:
         """
         Add a comment to a card
 
@@ -383,7 +408,7 @@ class WeKanClient:
         payload = {"authorId": author_id, "comment": comment}
         response = self.session.post(url, json=payload, timeout=self.timeout)
         self._check_response(response)
-        return Comment.model_validate(response.json())
+        return CommentId.model_validate(response.json())
 
     def get_checklists(self, board_id: str, card_id: str) -> list[Checklist]:
         """
@@ -403,7 +428,7 @@ class WeKanClient:
 
     def create_checklist(
         self, board_id: str, card_id: str, title: str, items: str | None = None
-    ) -> Checklist:
+    ) -> ChecklistId:
         """
         Create a checklist on a card
 
@@ -414,7 +439,7 @@ class WeKanClient:
             items: Comma-separated list of checklist items
 
         Returns:
-            Created checklist
+            Created checklist ID
         """
         url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/checklists"
         payload = {"title": title}
@@ -422,7 +447,7 @@ class WeKanClient:
             payload["items"] = items
         response = self.session.post(url, json=payload, timeout=self.timeout)
         self._check_response(response)
-        return Checklist.model_validate(response.json())
+        return ChecklistId.model_validate(response.json())
 
     def get_checklist(
         self, board_id: str, card_id: str, checklist_id: str
@@ -442,3 +467,65 @@ class WeKanClient:
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
         return ChecklistDetails.model_validate(response.json())
+
+    def create_checklist_item(
+        self, board_id: str, card_id: str, checklist_id: str, title: str
+    ) -> ChecklistItemId:
+        """
+        Add a new item to a checklist
+
+        Args:
+            board_id: ID of the board
+            card_id: ID of the card
+            checklist_id: ID of the checklist
+            title: Title of the new item
+
+        Returns:
+            Created checklist item ID
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/checklists/{checklist_id}/items"
+        payload = {"title": title}
+        response = self.session.post(url, json=payload, timeout=self.timeout)
+        self._check_response(response)
+        return ChecklistItemId.model_validate(response.json())
+
+    def get_checklist_item(
+        self, board_id: str, card_id: str, checklist_id: str, item_id: str
+    ) -> ChecklistItemDetails:
+        """
+        Get a checklist item
+
+        Args:
+            board_id: ID of the board
+            card_id: ID of the card
+            checklist_id: ID of the checklist
+            item_id: ID of the item
+
+        Returns:
+            Checklist item details
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/checklists/{checklist_id}/items/{item_id}"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        return ChecklistItemDetails.model_validate(response.json())
+
+    def edit_checklist_item(
+        self, board_id: str, card_id: str, checklist_id: str, item_id: str, **kwargs
+    ) -> ChecklistItemId:
+        """
+        Edit a checklist item
+
+        Args:
+            board_id: ID of the board
+            card_id: ID of the card
+            checklist_id: ID of the checklist
+            item_id: ID of the item
+            **kwargs: Fields to update (title, isFinished)
+
+        Returns:
+            Updated checklist item ID
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/checklists/{checklist_id}/items/{item_id}"
+        response = self.session.put(url, json=kwargs, timeout=self.timeout)
+        self._check_response(response)
+        return ChecklistItemId.model_validate(response.json())

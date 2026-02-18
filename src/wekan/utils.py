@@ -95,34 +95,74 @@ def handle_errors(f):
     return wrapper
 
 
-def with_client_login(fn):
-    """Decorator that creates a WeKanClient from url/username/password/token
-    kwargs, performs login if needed, and passes client to the wrapped function."""
+def wekan_command(_fn=None, *, format_option=True):
+    """Decorator that adds common auth/format click options, handles errors,
+    creates a WeKanClient, performs login, and passes client to the wrapped function.
 
-    @functools.wraps(fn)
-    def wrapper(*args, **kwargs):
-        url = kwargs.pop("url", None)
-        username = kwargs.pop("username", None)
-        password = kwargs.pop("password", None)
-        token = kwargs.pop("token", None)
+    Usage:
+        @wekan_command
+        def my_cmd(client, output_format, ...): ...
 
-        base_url = resolve_env(url, "URL")
-        username = resolve_env(username, "USERNAME")
-        password = resolve_env(password, "PASSWORD")
-        token = resolve_env(token, "TOKEN")
+        @wekan_command(format_option=False)
+        def my_cmd(client, ...): ...
+    """
 
-        if not base_url:
-            click.echo(
-                "Error: WeKan URL is required. Provide via --url or WEKAN_URL environment variable.",
-                err=True,
-            )
-            sys.exit(1)
+    def decorator(fn):
+        wrapped = fn
+        if format_option:
+            wrapped = click.option(
+                "--format",
+                "output_format",
+                type=click.Choice(["json", "pretty", "simple"]),
+                default="json",
+                help="Output format",
+            )(wrapped)
+        wrapped = click.option("--token", help="Authentication token")(wrapped)
+        wrapped = click.option(
+            "--password", help="Password for authentication", hide_input=True
+        )(wrapped)
+        wrapped = click.option("--username", help="Username for authentication")(
+            wrapped
+        )
+        wrapped = click.option("--url", help="WeKan instance URL")(wrapped)
 
-        client = WeKanClient(base_url, username, password, token)
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            try:
+                url = kwargs.pop("url", None)
+                username = kwargs.pop("username", None)
+                password = kwargs.pop("password", None)
+                token = kwargs.pop("token", None)
 
-        if not token and username and password:
-            client.login()
+                base_url = resolve_env(url, "URL")
+                username = resolve_env(username, "USERNAME")
+                password = resolve_env(password, "PASSWORD")
+                token = resolve_env(token, "TOKEN")
 
-        return fn(client, *args, **kwargs)
+                if not base_url:
+                    click.echo(
+                        "Error: WeKan URL is required. Provide via --url or WEKAN_URL environment variable.",
+                        err=True,
+                    )
+                    sys.exit(1)
 
-    return wrapper
+                client = WeKanClient(base_url, username, password, token)
+
+                if not token and username and password:
+                    client.login()
+
+                return fn(client, *args, **kwargs)
+            except WeKanAPIError as e:
+                click.echo(f"Error: {e.error}", err=True)
+            except ValidationError:
+                click.echo("Error: API returned invalid response", err=True)
+            except Exception as e:
+                click.echo(f"Error: {e} {type(e).__name__}", err=True)
+                sys.exit(1)
+
+        setattr(wrapper, "__click_params__", getattr(wrapped, "__click_params__"))
+        return wrapper
+
+    if _fn is not None:
+        return decorator(_fn)
+    return decorator
