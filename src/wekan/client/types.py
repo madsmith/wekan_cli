@@ -2,11 +2,67 @@
 Pydantic models for WeKan API responses.
 """
 
+from enum import Enum
 from typing import TypeAlias
 
 from pydantic import BaseModel, ConfigDict, Field
 
 UserID: TypeAlias = str
+
+
+class Color(str, Enum):
+    WHITE = "white"
+    GREEN = "green"
+    YELLOW = "yellow"
+    ORANGE = "orange"
+    RED = "red"
+    PURPLE = "purple"
+    BLUE = "blue"
+    SKY = "sky"
+    LIME = "lime"
+    PINK = "pink"
+    BLACK = "black"
+    SILVER = "silver"
+    PEACHPUFF = "peachpuff"
+    CRIMSON = "crimson"
+    PLUM = "plum"
+    DARKGREEN = "darkgreen"
+    SLATEBLUE = "slateblue"
+    MAGENTA = "magenta"
+    GOLD = "gold"
+    NAVY = "navy"
+    GRAY = "gray"
+    SADDLEBROWN = "saddlebrown"
+    PALETURQUOISE = "paleturquoise"
+    MISTYROSE = "mistyrose"
+    INDIGO = "indigo"
+
+
+class BoardColor(str, Enum):
+    BELIZE = "belize"
+    NEPHRITIS = "nephritis"
+    POMEGRANATE = "pomegranate"
+    PUMPKIN = "pumpkin"
+    WISTERIA = "wisteria"
+    MODERATEPINK = "moderatepink"
+    STRONGCYAN = "strongcyan"
+    LIMEGREEN = "limegreen"
+    MIDNIGHT = "midnight"
+    DARK = "dark"
+    RELAX = "relax"
+    CORTEZA = "corteza"
+    CLEARBLUE = "clearblue"
+    NATURAL = "natural"
+    MODERN = "modern"
+    MODERNDARK = "moderndark"
+    EXODARK = "exodark"
+    CLEANDARK = "cleandark"
+    CLEANLIGHT = "cleanlight"
+
+
+class BoardPermission(str, Enum):
+    PUBLIC = "public"
+    PRIVATE = "private"
 
 
 class WeKanModel(BaseModel):
@@ -53,7 +109,7 @@ class BoardId(WeKanModel):
     boardId: str = Field(validation_alias="_id")
 
 
-class BoardListing(BoardId):
+class BoardInfo(BoardId):
     title: str
 
 
@@ -68,6 +124,20 @@ class BoardMember(WeKanModel):
 
 class BoardDetails(BoardId):
     title: str
+    description: str | None = None
+    color: BoardColor | None = None
+    permission: BoardPermission | None = None
+    archived: bool | None = None
+    archivedAt: str | None = None
+    createdAt: str | None = None
+    modifiedAt: str | None = None
+    sort: int | None = None
+    subtasksDefaultBoardId: str | None = None
+    subtasksDefaultListId: str | None = None
+    presentParentTask: str | None = None
+    receivedAt: str | None = None
+    startAt: str | None = None
+    dueAt: str | None = None
     labels: list[BoardLabel] | None = None
     members: list[BoardMember] | None = None
     teams: list[BoardTeam] | None = None
@@ -89,6 +159,7 @@ class SwimlaneDetails(SwimlaneId):
     boardId: str | None = None
     createdAt: str | None = None
     sort: int | None = None
+    color: Color | None = None
     updatedAt: str | None = None
     modifiedAt: str | None = None
     collapsed: bool | None = None
@@ -116,6 +187,7 @@ class ListDetails(ListId):
     boardId: str | None = None
     swimlaneId: str | None = None
     sort: int | None = None
+    color: Color | None = None
     createdAt: str | None = None
     updatedAt: str | None = None
     modifiedAt: str | None = None
@@ -144,6 +216,7 @@ class Vote(WeKanModel):
 class CardDetails(CardId):
     title: str
     description: str | None = None
+    color: Color | None = None
     archived: bool | None = None
     archivedAt: str | None = None
     listId: str | None = None

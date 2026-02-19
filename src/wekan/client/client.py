@@ -10,7 +10,7 @@ from .types import (
     APIError,
     BoardDetails,
     BoardId,
-    BoardListing,
+    BoardInfo,
     CardDetails,
     CardId,
     CardInfo,
@@ -125,7 +125,7 @@ class WeKanClient:
         self._check_response(response)
         return [User.model_validate(user) for user in response.json()]
 
-    def get_boards(self) -> list[BoardListing]:
+    def get_boards(self) -> list[BoardInfo]:
         """
         Get all boards accessible to the user
 
@@ -135,9 +135,9 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
-        return [BoardListing.model_validate(board) for board in response.json()]
+        return [BoardInfo.model_validate(board) for board in response.json()]
 
-    def get_boards_for_user(self, user_id: UserID) -> list[BoardListing]:
+    def get_boards_for_user(self, user_id: UserID) -> list[BoardInfo]:
         """
         Get all boards accessible to a specific user
 
@@ -150,7 +150,7 @@ class WeKanClient:
         url = f"{self.base_url}/api/users/{user_id}/boards"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
-        return [BoardListing.model_validate(board) for board in response.json()]
+        return [BoardInfo.model_validate(board) for board in response.json()]
 
     def get_board(self, board_id: str) -> BoardDetails | None:
         """
