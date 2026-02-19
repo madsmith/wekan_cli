@@ -196,11 +196,12 @@ def _build_parser_action_list(actions):
     p.add_argument("board_id", metavar="BOARD_ID")
     p.set_defaults(handler=handle_list_swimlanes)
 
-    p = types.add_parser("cards", help="List cards")
+    p = types.add_parser("cards", help="List cards in a list or swimlane")
     p.add_argument("board_id", metavar="BOARD_ID")
-    p.add_argument("list_id", metavar="LIST_ID", nargs="?")
-    p.add_argument(
-        "--swimlane-id", metavar="SWIMLANE_ID", help="List cards in swimlane instead"
+    source = p.add_mutually_exclusive_group(required=True)
+    source.add_argument("--list-id", metavar="LIST_ID", help="List cards in a list")
+    source.add_argument(
+        "--swimlane-id", metavar="SWIMLANE_ID", help="List cards in a swimlane"
     )
     p.set_defaults(handler=handle_list_cards)
 
