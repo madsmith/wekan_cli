@@ -13,7 +13,7 @@ from .types import (
     BoardListing,
     CardDetails,
     CardId,
-    CardSummary,
+    CardInfo,
     Checklist,
     ChecklistDetails,
     ChecklistId,
@@ -22,8 +22,9 @@ from .types import (
     Comment,
     CommentDetails,
     CommentId,
-    List,
+    ListDetails,
     ListId,
+    ListInfo,
     LoginResponse,
     Swimlane,
     SwimlaneDetails,
@@ -167,7 +168,7 @@ class WeKanClient:
             return None
         return BoardDetails.model_validate(response.json())
 
-    def get_lists(self, board_id: str) -> list[List]:
+    def get_lists(self, board_id: str) -> list[ListInfo]:
         """
         Get all lists in a board
 
@@ -180,7 +181,7 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards/{board_id}/lists"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
-        return [List.model_validate(list) for list in response.json()]
+        return [ListInfo.model_validate(lst) for lst in response.json()]
 
     def get_swimlanes(self, board_id: str) -> list[Swimlane]:
         """
@@ -248,7 +249,7 @@ class WeKanClient:
         self._check_response(response)
         return SwimlaneId.model_validate(response.json())
 
-    def get_cards(self, board_id: str, list_id: str) -> list[CardSummary]:
+    def get_cards(self, board_id: str, list_id: str) -> list[CardInfo]:
         """
         Get all cards in a list
 
@@ -262,7 +263,7 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
-        return [CardSummary.model_validate(card) for card in response.json()]
+        return [CardInfo.model_validate(card) for card in response.json()]
 
     def get_card(self, board_id: str, list_id: str, card_id: str) -> CardDetails | None:
         """
@@ -333,7 +334,7 @@ class WeKanClient:
         self._check_response(response)
         return ListId.model_validate(response.json())
 
-    def get_list(self, board_id: str, list_id: str) -> List | None:
+    def get_list(self, board_id: str, list_id: str) -> ListDetails | None:
         """
         Get a specific list
 
@@ -349,7 +350,7 @@ class WeKanClient:
         self._check_response(response)
         if not response.text:
             return None
-        return List.model_validate(response.json())
+        return ListDetails.model_validate(response.json())
 
     def delete_list(self, board_id: str, list_id: str) -> ListId:
         """
@@ -457,7 +458,7 @@ class WeKanClient:
         self._check_response(response)
         return CardId.model_validate(response.json())
 
-    def get_swimlane_cards(self, board_id: str, swimlane_id: str) -> list[CardSummary]:
+    def get_swimlane_cards(self, board_id: str, swimlane_id: str) -> list[CardInfo]:
         """
         Get all cards in a swimlane
 
@@ -471,7 +472,7 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards/{board_id}/swimlanes/{swimlane_id}/cards"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
-        return [CardSummary.model_validate(card) for card in response.json()]
+        return [CardInfo.model_validate(card) for card in response.json()]
 
     def get_card_by_id(self, card_id: str) -> CardDetails | None:
         """

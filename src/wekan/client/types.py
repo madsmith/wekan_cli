@@ -72,29 +72,63 @@ class ListId(WeKanModel):
     listId: str = Field(validation_alias="_id")
 
 
-class List(ListId):
+class ListInfo(ListId):
     title: str
+
+
+class ListDetails(ListId):
+    title: str
+    archived: bool | None = None
+    boardId: str | None = None
+    swimlaneId: str | None = None
+    sort: int | None = None
+    createdAt: str | None = None
+    updatedAt: str | None = None
+    modifiedAt: str | None = None
 
 
 class CardId(WeKanModel):
     cardId: str = Field(validation_alias="_id")
 
 
-class CardSummary(CardId):
+class CardInfo(CardId):
     title: str
     description: str | None = None
+
+
+class Vote(WeKanModel):
+    question: str | None = None
+    positive: list[str] | None = None
+    negative: list[str] | None = None
+    end: str | None = None
+    public: bool | None = None
+    allowNonBoardMembers: bool | None = None
 
 
 class CardDetails(CardId):
     title: str
     description: str | None = None
-    boardId: str
-    listId: str
-    userId: str
-    swimlaneId: str
-    archived: bool
-    sort: int
-    cardNumber: int
+    archived: bool | None = None
+    archivedAt: str | None = None
+    listId: str | None = None
+    swimlaneId: str | None = None
+    boardId: str | None = None
+    createdAt: str | None = None
+    modifiedAt: str | None = None
+    assignedBy: str | None = None
+    requestedBy: str | None = None
+    labelIds: list[str] | None = None
+    members: list[str] | None = None
+    assignees: list[str] | None = None
+    receivedAt: str | None = None
+    dueAt: str | None = None
+    endsAt: str | None = None
+    cardNumber: int | None = None
+    sort: int | None = None
+    customFields: list[dict] | None = None
+    dateLastActivity: str | None = None
+    startAt: str | None = None
+    vote: Vote | None = None
 
 
 class CommentId(WeKanModel):
@@ -132,6 +166,15 @@ class ChecklistItem(ChecklistItemId):
     isFinished: bool
 
 
+class ChecklistDetails(ChecklistId):
+    cardId: str | None = None
+    title: str
+    finishedAt: str | None = None
+    createdAt: str | None = None
+    sort: int | None = None
+    items: list[ChecklistItem] | None = None
+
+
 class ChecklistItemDetails(ChecklistItemId):
     title: str
     sort: int | None = None
@@ -140,12 +183,3 @@ class ChecklistItemDetails(ChecklistItemId):
     cardId: str | None = None
     createdAt: str | None = None
     modifiedAt: str | None = None
-
-
-class ChecklistDetails(ChecklistId):
-    cardId: str | None = None
-    title: str
-    finishedAt: str | None = None
-    createdAt: str | None = None
-    sort: int | None = None
-    items: list[ChecklistItem] | None = None
