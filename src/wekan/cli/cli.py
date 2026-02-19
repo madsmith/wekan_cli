@@ -381,7 +381,7 @@ def build_parser():
         dest="format",
         choices=["json", "pretty", "simple"],
         default=None,
-        help="Output format (default: json, env: WEKAN_OUTPUT_FORMAT)",
+        help="Output format (default: simple, env: WEKAN_OUTPUT_FORMAT)",
     )
 
     conn = parser.add_argument_group("connection options")
@@ -424,11 +424,11 @@ def main():
     args = parser.parse_args()
 
     if args.format is None:
-        env_fmt = os.getenv("WEKAN_OUTPUT_FORMAT", "json").lower()
+        env_fmt = os.getenv("WEKAN_OUTPUT_FORMAT", "simple").lower()
         if env_fmt in ("json", "pretty", "simple"):
             args.format = env_fmt
         else:
-            args.format = "json"
+            args.format = "simple"
 
     if not args.action:
         parser.print_help()
