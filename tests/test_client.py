@@ -50,7 +50,7 @@ def test_list_lifecycle(client: WeKanClient):
 
         # List
         lists = client.get_lists(board_id)
-        assert any(list.listId == list_id for list in lists)
+        assert any(lst.listId == list_id for lst in lists)
 
         # Get
         lst = client.get_list(board_id, list_id)
@@ -61,7 +61,7 @@ def test_list_lifecycle(client: WeKanClient):
         # Delete
         client.delete_list(board_id, list_id)
         lists = client.get_lists(board_id)
-        assert not any(list.listId == list_id for list in lists)
+        assert not any(lst.listId == list_id for lst in lists)
     finally:
         client.delete_board(board_id)
 
