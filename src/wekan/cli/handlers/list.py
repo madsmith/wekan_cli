@@ -7,34 +7,41 @@ from ._helpers import output
 
 def handle_list_boards(client, args):
     if args.user_id:
-        output(client.get_boards_for_user(args.user_id), args.format)
+        boards = client.get_boards_for_user(args.user_id)
     else:
-        output(client.get_boards(), args.format)
+        boards = client.get_boards()
+    output(boards, args.format)
 
 
 def handle_list_lists(client, args):
-    output(client.get_lists(args.board_id), args.format)
+    lists = client.get_lists(args.board_id)
+    output(lists, args.format)
 
 
 def handle_list_swimlanes(client, args):
-    output(client.get_swimlanes(args.board_id), args.format)
+    swimlanes = client.get_swimlanes(args.board_id)
+    output(swimlanes, args.format)
 
 
 def handle_list_cards(client, args):
     swimlane_id = getattr(args, "swimlane_id", None)
     if swimlane_id:
-        output(client.get_swimlane_cards(args.board_id, swimlane_id), args.format)
+        cards = client.get_swimlane_cards(args.board_id, swimlane_id)
     else:
-        output(client.get_cards(args.board_id, args.list_id), args.format)
+        cards = client.get_cards(args.board_id, args.list_id)
+    output(cards, args.format)
 
 
 def handle_list_users(client, args):
-    output(client.get_users(), args.format)
+    users = client.get_users()
+    output(users, args.format)
 
 
 def handle_list_comments(client, args):
-    output(client.get_comments(args.board_id, args.card_id), args.format)
+    comments = client.get_comments(args.board_id, args.card_id)
+    output(comments, args.format)
 
 
 def handle_list_checklists(client, args):
-    output(client.get_checklists(args.board_id, args.card_id), args.format)
+    checklists = client.get_checklists(args.board_id, args.card_id)
+    output(checklists, args.format)
