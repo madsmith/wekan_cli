@@ -20,11 +20,14 @@ from .types import (
     ChecklistItemDetails,
     ChecklistItemId,
     Comment,
+    CommentDetails,
     CommentId,
     List,
     ListId,
     LoginResponse,
     Swimlane,
+    SwimlaneDetails,
+    SwimlaneId,
     User,
 )
 
@@ -194,6 +197,57 @@ class WeKanClient:
         self._check_response(response)
         return [Swimlane.model_validate(s) for s in response.json()]
 
+    def get_swimlane(self, board_id: str, swimlane_id: str) -> SwimlaneDetails | None:
+        """
+        Get details of a specific swimlane
+
+        Args:
+            board_id: ID of the board
+            swimlane_id: ID of the swimlane
+
+        Returns:
+            Swimlane details, or None if not found
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/swimlanes/{swimlane_id}"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        if not response.text:
+            return None
+        return SwimlaneDetails.model_validate(response.json())
+
+    def create_swimlane(self, board_id: str, title: str) -> SwimlaneId:
+        """
+        Create a new swimlane in a board
+
+        Args:
+            board_id: ID of the board
+            title: Title of the swimlane
+
+        Returns:
+            Created swimlane ID
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/swimlanes"
+        payload = {"title": title}
+        response = self.session.post(url, json=payload, timeout=self.timeout)
+        self._check_response(response)
+        return SwimlaneId.model_validate(response.json())
+
+    def delete_swimlane(self, board_id: str, swimlane_id: str) -> SwimlaneId:
+        """
+        Delete a swimlane
+
+        Args:
+            board_id: ID of the board
+            swimlane_id: ID of the swimlane
+
+        Returns:
+            Deleted swimlane ID
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/swimlanes/{swimlane_id}"
+        response = self.session.delete(url, timeout=self.timeout)
+        self._check_response(response)
+        return SwimlaneId.model_validate(response.json())
+
     def get_cards(self, board_id: str, list_id: str) -> list[CardSummary]:
         """
         Get all cards in a list
@@ -247,16 +301,20 @@ class WeKanClient:
         self._check_response(response)
         return BoardId.model_validate(response.json())
 
-    def delete_board(self, board_id: str) -> None:
+    def delete_board(self, board_id: str) -> BoardId:
         """
         Delete a board
 
         Args:
             board_id: ID of the board
+
+        Returns:
+            Deleted board ID
         """
         url = f"{self.base_url}/api/boards/{board_id}"
         response = self.session.delete(url, timeout=self.timeout)
         self._check_response(response)
+        return BoardId.model_validate(response.json())
 
     def create_list(self, board_id: str, title: str) -> ListId:
         """
@@ -293,17 +351,21 @@ class WeKanClient:
             return None
         return List.model_validate(response.json())
 
-    def delete_list(self, board_id: str, list_id: str) -> None:
+    def delete_list(self, board_id: str, list_id: str) -> ListId:
         """
         Delete a list
 
         Args:
             board_id: ID of the board
             list_id: ID of the list
+
+        Returns:
+            Deleted list ID
         """
         url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}"
         response = self.session.delete(url, timeout=self.timeout)
         self._check_response(response)
+        return ListId.model_validate(response.json())
 
     def create_card(
         self,
@@ -378,7 +440,7 @@ class WeKanClient:
         self._check_response(response)
         return CardId.model_validate(response.json())
 
-    def delete_card(self, board_id: str, list_id: str, card_id: str) -> None:
+    def delete_card(self, board_id: str, list_id: str, card_id: str) -> CardId:
         """
         Delete a card
 
@@ -386,10 +448,14 @@ class WeKanClient:
             board_id: ID of the board
             list_id: ID of the list
             card_id: ID of the card
+
+        Returns:
+            Deleted card ID
         """
         url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards/{card_id}"
         response = self.session.delete(url, timeout=self.timeout)
         self._check_response(response)
+        return CardId.model_validate(response.json())
 
     def get_swimlane_cards(self, board_id: str, swimlane_id: str) -> list[CardSummary]:
         """
@@ -458,6 +524,44 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/comments"
         payload = {"authorId": author_id, "comment": comment}
         response = self.session.post(url, json=payload, timeout=self.timeout)
+        self._check_response(response)
+        return CommentId.model_validate(response.json())
+
+    def get_comment(
+        self, board_id: str, card_id: str, comment_id: str
+    ) -> CommentDetails | None:
+        """
+        Get a specific comment
+
+        Args:
+            board_id: ID of the board
+            card_id: ID of the card
+            comment_id: ID of the comment
+
+        Returns:
+            Comment details, or None if not found
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/comments/{comment_id}"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        if not response.text:
+            return None
+        return CommentDetails.model_validate(response.json())
+
+    def delete_comment(self, board_id: str, card_id: str, comment_id: str) -> CommentId:
+        """
+        Delete a comment
+
+        Args:
+            board_id: ID of the board
+            card_id: ID of the card
+            comment_id: ID of the comment
+
+        Returns:
+            Deleted comment ID
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/comments/{comment_id}"
+        response = self.session.delete(url, timeout=self.timeout)
         self._check_response(response)
         return CommentId.model_validate(response.json())
 
@@ -542,7 +646,9 @@ class WeKanClient:
         self._check_response(response)
         return ChecklistItemId.model_validate(response.json())
 
-    def delete_checklist(self, board_id: str, card_id: str, checklist_id: str) -> None:
+    def delete_checklist(
+        self, board_id: str, card_id: str, checklist_id: str
+    ) -> ChecklistId:
         """
         Delete a checklist
 
@@ -550,14 +656,18 @@ class WeKanClient:
             board_id: ID of the board
             card_id: ID of the card
             checklist_id: ID of the checklist
+
+        Returns:
+            Deleted checklist ID
         """
         url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/checklists/{checklist_id}"
         response = self.session.delete(url, timeout=self.timeout)
         self._check_response(response)
+        return ChecklistId.model_validate(response.json())
 
     def delete_checklist_item(
         self, board_id: str, card_id: str, checklist_id: str, item_id: str
-    ) -> None:
+    ) -> ChecklistItemId:
         """
         Delete a checklist item
 
@@ -566,10 +676,14 @@ class WeKanClient:
             card_id: ID of the card
             checklist_id: ID of the checklist
             item_id: ID of the item
+
+        Returns:
+            Deleted checklist item ID
         """
         url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/checklists/{checklist_id}/items/{item_id}"
         response = self.session.delete(url, timeout=self.timeout)
         self._check_response(response)
+        return ChecklistItemId.model_validate(response.json())
 
     def get_checklist_item(
         self, board_id: str, card_id: str, checklist_id: str, item_id: str

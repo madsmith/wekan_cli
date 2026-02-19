@@ -4,7 +4,7 @@ Handlers for the 'get' action.
 
 import sys
 
-from ._helpers import not_implemented, output
+from ._helpers import output
 
 
 def _not_found(label):
@@ -27,7 +27,10 @@ def handle_get_list(client, args):
 
 
 def handle_get_swimlane(client, args):
-    not_implemented("get swimlane")
+    result = client.get_swimlane(args.board_id, args.swimlane_id)
+    if result is None:
+        _not_found("Swimlane")
+    output(result, args.format)
 
 
 def handle_get_card(client, args):
@@ -57,4 +60,7 @@ def handle_get_checklist_item(client, args):
 
 
 def handle_get_comment(client, args):
-    not_implemented("get comment")
+    result = client.get_comment(args.board_id, args.card_id, args.comment_id)
+    if result is None:
+        _not_found("Comment")
+    output(result, args.format)

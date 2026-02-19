@@ -4,8 +4,6 @@ Handlers for the 'delete' action.
 
 import sys
 
-from ._helpers import not_implemented
-
 
 def handle_delete_card(client, args):
     client.delete_card(args.board_id, args.list_id, args.card_id)
@@ -23,11 +21,13 @@ def handle_delete_list(client, args):
 
 
 def handle_delete_swimlane(client, args):
-    not_implemented("delete swimlane")
+    client.delete_swimlane(args.board_id, args.swimlane_id)
+    print("Deleted.", file=sys.stderr)
 
 
 def handle_delete_comment(client, args):
-    not_implemented("delete comment")
+    client.delete_comment(args.board_id, args.card_id, args.comment_id)
+    print("Deleted.", file=sys.stderr)
 
 
 def handle_delete_checklist(client, args):

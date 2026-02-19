@@ -46,9 +46,26 @@ class BoardDetails(BoardId):
     labels: list[Label] | None = None
 
 
-class Swimlane(WeKanModel):
+class SwimlaneId(WeKanModel):
     swimlaneId: str = Field(validation_alias="_id")
+
+
+class Swimlane(SwimlaneId):
     title: str
+
+
+class SwimlaneDetails(SwimlaneId):
+    title: str
+    archived: bool | None = None
+    archivedAt: str | None = None
+    boardId: str | None = None
+    createdAt: str | None = None
+    sort: int | None = None
+    color: str | None = None
+    updatedAt: str | None = None
+    modifiedAt: str | None = None
+    type: str | None = None
+    collapsed: bool | None = None
 
 
 class ListId(WeKanModel):
@@ -87,6 +104,15 @@ class CommentId(WeKanModel):
 class Comment(CommentId):
     comment: str
     authorId: str
+
+
+class CommentDetails(CommentId):
+    boardId: str | None = None
+    cardId: str | None = None
+    text: str | None = None
+    createdAt: str | None = None
+    modifiedAt: str | None = None
+    userId: str | None = None
 
 
 class ChecklistId(WeKanModel):

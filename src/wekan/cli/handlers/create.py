@@ -2,7 +2,7 @@
 Handlers for the 'create' action.
 """
 
-from ._helpers import merge_fields, not_implemented, output
+from ._helpers import merge_fields, output
 
 
 def handle_create_board(client, args):
@@ -59,4 +59,4 @@ def handle_create_checklist_item(client, args):
 
 
 def handle_create_swimlane(client, args):
-    not_implemented("create swimlane")
+    output(client.create_swimlane(args.board_id, args.title), args.format)
