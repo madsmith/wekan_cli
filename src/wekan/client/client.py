@@ -77,6 +77,7 @@ class WeKanClient:
         self.username = username
         self.password = password
         self.token = token
+        self.user_id: str | None = None
         self.timeout = timeout
         self.session = requests.Session()
 
@@ -102,6 +103,7 @@ class WeKanClient:
         result = LoginResponse.model_validate(response.json())
         if result.token:
             self.token = result.token
+            self.user_id = result.userId
             self.session.headers.update({"Authorization": f"Bearer {self.token}"})
 
         return result
@@ -241,6 +243,17 @@ class WeKanClient:
         self._check_response(response)
         return BoardId.model_validate(response.json())
 
+    def delete_board(self, board_id: str) -> None:
+        """
+        Delete a board
+
+        Args:
+            board_id: ID of the board
+        """
+        url = f"{self.base_url}/api/boards/{board_id}"
+        response = self.session.delete(url, timeout=self.timeout)
+        self._check_response(response)
+
     def create_list(self, board_id: str, title: str) -> ListId:
         """
         Create a new list in a board
@@ -257,6 +270,34 @@ class WeKanClient:
         response = self.session.post(url, json=payload, timeout=self.timeout)
         self._check_response(response)
         return ListId.model_validate(response.json())
+
+    def get_list(self, board_id: str, list_id: str) -> List:
+        """
+        Get a specific list
+
+        Args:
+            board_id: ID of the board
+            list_id: ID of the list
+
+        Returns:
+            List details
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        return List.model_validate(response.json())
+
+    def delete_list(self, board_id: str, list_id: str) -> None:
+        """
+        Delete a list
+
+        Args:
+            board_id: ID of the board
+            list_id: ID of the list
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}"
+        response = self.session.delete(url, timeout=self.timeout)
+        self._check_response(response)
 
     def create_card(
         self,
@@ -488,6 +529,35 @@ class WeKanClient:
         response = self.session.post(url, json=payload, timeout=self.timeout)
         self._check_response(response)
         return ChecklistItemId.model_validate(response.json())
+
+    def delete_checklist(self, board_id: str, card_id: str, checklist_id: str) -> None:
+        """
+        Delete a checklist
+
+        Args:
+            board_id: ID of the board
+            card_id: ID of the card
+            checklist_id: ID of the checklist
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/checklists/{checklist_id}"
+        response = self.session.delete(url, timeout=self.timeout)
+        self._check_response(response)
+
+    def delete_checklist_item(
+        self, board_id: str, card_id: str, checklist_id: str, item_id: str
+    ) -> None:
+        """
+        Delete a checklist item
+
+        Args:
+            board_id: ID of the board
+            card_id: ID of the card
+            checklist_id: ID of the checklist
+            item_id: ID of the item
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/checklists/{checklist_id}/items/{item_id}"
+        response = self.session.delete(url, timeout=self.timeout)
+        self._check_response(response)
 
     def get_checklist_item(
         self, board_id: str, card_id: str, checklist_id: str, item_id: str

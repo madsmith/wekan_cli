@@ -28,6 +28,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 
+[project.optional-dependencies]
+test = ["pytest>=7.0", "pytest-dependency>=0.6"]
+
 [project.scripts]
 wekancli = "wekan.cli:main"
 
@@ -41,3 +44,10 @@ include = ["wekan*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "wekan.__version__"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: end-to-end tests against live WeKan server",
+    "manual: tests that must be explicitly requested with -m manual",
+]

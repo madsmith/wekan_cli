@@ -13,7 +13,8 @@ def handle_delete_card(client, args):
 
 
 def handle_delete_board(client, args):
-    not_implemented("delete board")
+    client.delete_board(args.board_id)
+    print("Deleted.", file=sys.stderr)
 
 
 def handle_delete_list(client, args):
