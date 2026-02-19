@@ -150,25 +150,20 @@ def _build_parser_action_get(actions):
 
     p = types.add_parser("card", help="Get card details")
     p.add_argument("card_id", metavar="CARD_ID")
-    p.add_argument("board_id", metavar="BOARD_ID", nargs="?")
-    p.add_argument("list_id", metavar="LIST_ID", nargs="?")
     p.set_defaults(handler=handle_get_card)
 
     p = types.add_parser("checklist", help="Get checklist details")
-    p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("checklist_id", metavar="CHECKLIST_ID")
     p.set_defaults(handler=handle_get_checklist)
 
     p = types.add_parser("checklist-item", help="Get checklist item details")
-    p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("checklist_id", metavar="CHECKLIST_ID")
     p.add_argument("item_id", metavar="ITEM_ID")
     p.set_defaults(handler=handle_get_checklist_item)
 
     p = types.add_parser("comment", help="Get comment details")
-    p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("comment_id", metavar="COMMENT_ID")
     p.set_defaults(handler=handle_get_comment)
@@ -209,12 +204,10 @@ def _build_parser_action_list(actions):
     p.set_defaults(handler=handle_list_users)
 
     p = types.add_parser("comments", help="List comments on a card")
-    p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("card_id", metavar="CARD_ID")
     p.set_defaults(handler=handle_list_comments)
 
     p = types.add_parser("checklists", help="List checklists on a card")
-    p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("card_id", metavar="CARD_ID")
     p.set_defaults(handler=handle_list_checklists)
 
@@ -333,8 +326,6 @@ def _build_parser_action_delete(actions):
     p.set_defaults(handler=handle_delete_list)
 
     p = types.add_parser("card", help="Delete a card")
-    p.add_argument("board_id", metavar="BOARD_ID")
-    p.add_argument("list_id", metavar="LIST_ID")
     p.add_argument("card_id", metavar="CARD_ID")
     p.set_defaults(handler=handle_delete_card)
 
@@ -344,19 +335,16 @@ def _build_parser_action_delete(actions):
     p.set_defaults(handler=handle_delete_swimlane)
 
     p = types.add_parser("comment", help="Delete a comment")
-    p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("comment_id", metavar="COMMENT_ID")
     p.set_defaults(handler=handle_delete_comment)
 
     p = types.add_parser("checklist", help="Delete a checklist")
-    p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("checklist_id", metavar="CHECKLIST_ID")
     p.set_defaults(handler=handle_delete_checklist)
 
     p = types.add_parser("checklist-item", help="Delete a checklist item")
-    p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("checklist_id", metavar="CHECKLIST_ID")
     p.add_argument("item_id", metavar="ITEM_ID")

@@ -4,11 +4,11 @@ Handlers for the 'edit' action.
 
 import sys
 
-from ._helpers import merge_fields, output
+from ._helpers import merge_fields_with_stdin, output
 
 
 def handle_edit_card(client, args):
-    fields = merge_fields(args)
+    fields = merge_fields_with_stdin(args)
     if not fields:
         print(
             "Error: No fields to update. Use -f key=value or --json.", file=sys.stderr
@@ -19,7 +19,7 @@ def handle_edit_card(client, args):
 
 
 def handle_edit_checklist_item(client, args):
-    fields = merge_fields(args)
+    fields = merge_fields_with_stdin(args)
     if not fields:
         print(
             "Error: No fields to update. Use -f key=value or --json.", file=sys.stderr

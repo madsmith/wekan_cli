@@ -21,7 +21,7 @@ def read_json_stdin():
     return data
 
 
-def merge_fields(args):
+def merge_fields_with_stdin(args):
     """Merge --json stdin data with -f fields. -f takes precedence."""
     fields = {}
     if getattr(args, "use_json", False):
@@ -40,6 +40,11 @@ def error_exit(message):
     """Print error message to stderr and exit."""
     print(f"Error: {message}", file=sys.stderr)
     sys.exit(1)
+
+
+def not_found(label):
+    """Print not-found message and exit."""
+    error_exit(f"{label} not found")
 
 
 def not_implemented(label):

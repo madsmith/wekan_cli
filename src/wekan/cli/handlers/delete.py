@@ -4,10 +4,15 @@ Handlers for the 'delete' action.
 
 import sys
 
+from ._helpers import not_found
 
-def handle_delete_card(client, args):
-    client.delete_card(args.board_id, args.list_id, args.card_id)
-    print("Deleted.", file=sys.stderr)
+
+def _resolve_card(client, card_id):
+    """Fetch card by ID or exit if not found."""
+    card = client.get_card_by_id(card_id)
+    if card is None:
+        not_found(f"Card {card_id}")
+    return card
 
 
 def handle_delete_board(client, args):
@@ -25,18 +30,27 @@ def handle_delete_swimlane(client, args):
     print("Deleted.", file=sys.stderr)
 
 
+def handle_delete_card(client, args):
+    card = _resolve_card(client, args.card_id)
+    client.delete_card(card.boardId, card.listId, args.card_id)
+    print("Deleted.", file=sys.stderr)
+
+
 def handle_delete_comment(client, args):
-    client.delete_comment(args.board_id, args.card_id, args.comment_id)
+    card = _resolve_card(client, args.card_id)
+    client.delete_comment(card.boardId, args.card_id, args.comment_id)
     print("Deleted.", file=sys.stderr)
 
 
 def handle_delete_checklist(client, args):
-    client.delete_checklist(args.board_id, args.card_id, args.checklist_id)
+    card = _resolve_card(client, args.card_id)
+    client.delete_checklist(card.boardId, args.card_id, args.checklist_id)
     print("Deleted.", file=sys.stderr)
 
 
 def handle_delete_checklist_item(client, args):
+    card = _resolve_card(client, args.card_id)
     client.delete_checklist_item(
-        args.board_id, args.card_id, args.checklist_id, args.item_id
+        card.boardId, args.card_id, args.checklist_id, args.item_id
     )
     print("Deleted.", file=sys.stderr)
