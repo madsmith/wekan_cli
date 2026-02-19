@@ -2,7 +2,11 @@
 Pydantic models for WeKan API responses.
 """
 
+from typing import TypeAlias
+
 from pydantic import BaseModel, ConfigDict, Field
+
+UserID: TypeAlias = str
 
 
 class WeKanModel(BaseModel):
@@ -17,20 +21,32 @@ class APIError(WeKanModel):
 
 
 class User(WeKanModel):
-    userId: str = Field(validation_alias="_id")
+    userId: UserID = Field(validation_alias="_id")
     username: str
 
 
 class LoginResponse(WeKanModel):
-    userId: str = Field(validation_alias="id")
+    userId: UserID = Field(validation_alias="id")
     token: str
     tokenExpires: str
 
 
-class Label(WeKanModel):
+class BoardLabel(WeKanModel):
     labelId: str = Field(validation_alias="_id")
     name: str
     color: str
+
+
+class BoardTeam(WeKanModel):
+    teamId: str
+    teamDisplayName: str
+    isActive: bool | None = None
+
+
+class BoardOrg(WeKanModel):
+    orgId: str
+    orgDisplayName: str
+    isActive: bool | None = None
 
 
 class BoardId(WeKanModel):
@@ -41,16 +57,28 @@ class BoardListing(BoardId):
     title: str
 
 
+class BoardMember(WeKanModel):
+    userId: UserID
+    isAdmin: bool | None = None
+    isActive: bool | None = None
+    isNoComments: bool | None = None
+    isCommentOnly: bool | None = None
+    isWorker: bool | None = None
+
+
 class BoardDetails(BoardId):
     title: str
-    labels: list[Label] | None = None
+    labels: list[BoardLabel] | None = None
+    members: list[BoardMember] | None = None
+    teams: list[BoardTeam] | None = None
+    orgs: list[BoardOrg] | None = None
 
 
 class SwimlaneId(WeKanModel):
     swimlaneId: str = Field(validation_alias="_id")
 
 
-class Swimlane(SwimlaneId):
+class SwimlaneInfo(SwimlaneId):
     title: str
 
 
@@ -61,10 +89,8 @@ class SwimlaneDetails(SwimlaneId):
     boardId: str | None = None
     createdAt: str | None = None
     sort: int | None = None
-    color: str | None = None
     updatedAt: str | None = None
     modifiedAt: str | None = None
-    type: str | None = None
     collapsed: bool | None = None
 
 
@@ -76,15 +102,25 @@ class ListInfo(ListId):
     title: str
 
 
+class WIPLimit(WeKanModel):
+    value: int | None = None
+    enabled: bool | None = None
+    soft: bool | None = None
+
+
 class ListDetails(ListId):
     title: str
+    starred: bool | None = None
     archived: bool | None = None
+    archivedAt: str | None = None
     boardId: str | None = None
     swimlaneId: str | None = None
     sort: int | None = None
     createdAt: str | None = None
     updatedAt: str | None = None
     modifiedAt: str | None = None
+    wipLimit: WIPLimit | None = None
+    collapsed: bool | None = None
 
 
 class CardId(WeKanModel):
@@ -98,8 +134,8 @@ class CardInfo(CardId):
 
 class Vote(WeKanModel):
     question: str | None = None
-    positive: list[str] | None = None
-    negative: list[str] | None = None
+    positive: list[UserID] | None = None
+    negative: list[UserID] | None = None
     end: str | None = None
     public: bool | None = None
     allowNonBoardMembers: bool | None = None
@@ -115,11 +151,11 @@ class CardDetails(CardId):
     boardId: str | None = None
     createdAt: str | None = None
     modifiedAt: str | None = None
-    assignedBy: str | None = None
-    requestedBy: str | None = None
+    assignedBy: UserID | None = None
+    requestedBy: UserID | None = None
     labelIds: list[str] | None = None
-    members: list[str] | None = None
-    assignees: list[str] | None = None
+    members: list[UserID] | None = None
+    assignees: list[UserID] | None = None
     receivedAt: str | None = None
     dueAt: str | None = None
     endsAt: str | None = None
@@ -137,7 +173,7 @@ class CommentId(WeKanModel):
 
 class Comment(CommentId):
     comment: str
-    authorId: str
+    authorId: UserID
 
 
 class CommentDetails(CommentId):
@@ -146,7 +182,7 @@ class CommentDetails(CommentId):
     text: str | None = None
     createdAt: str | None = None
     modifiedAt: str | None = None
-    userId: str | None = None
+    userId: UserID | None = None
 
 
 class ChecklistId(WeKanModel):

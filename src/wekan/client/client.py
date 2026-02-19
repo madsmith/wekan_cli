@@ -26,10 +26,11 @@ from .types import (
     ListId,
     ListInfo,
     LoginResponse,
-    Swimlane,
     SwimlaneDetails,
     SwimlaneId,
+    SwimlaneInfo,
     User,
+    UserID,
 )
 
 DEBUG = os.getenv("WEKAN_DEBUG", False)
@@ -81,7 +82,7 @@ class WeKanClient:
         self.username = username
         self.password = password
         self.token = token
-        self.user_id: str | None = None
+        self.user_id: UserID | None = None
         self.timeout = timeout
         self.session = requests.Session()
 
@@ -136,7 +137,7 @@ class WeKanClient:
         self._check_response(response)
         return [BoardListing.model_validate(board) for board in response.json()]
 
-    def get_boards_for_user(self, user_id: str) -> list[BoardListing]:
+    def get_boards_for_user(self, user_id: UserID) -> list[BoardListing]:
         """
         Get all boards accessible to a specific user
 
@@ -183,7 +184,7 @@ class WeKanClient:
         self._check_response(response)
         return [ListInfo.model_validate(lst) for lst in response.json()]
 
-    def get_swimlanes(self, board_id: str) -> list[Swimlane]:
+    def get_swimlanes(self, board_id: str) -> list[SwimlaneInfo]:
         """
         Get all swimlanes in a board
 
@@ -196,7 +197,7 @@ class WeKanClient:
         url = f"{self.base_url}/api/boards/{board_id}/swimlanes"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
-        return [Swimlane.model_validate(s) for s in response.json()]
+        return [SwimlaneInfo.model_validate(s) for s in response.json()]
 
     def get_swimlane(self, board_id: str, swimlane_id: str) -> SwimlaneDetails | None:
         """
@@ -284,7 +285,7 @@ class WeKanClient:
             return None
         return CardDetails.model_validate(response.json())
 
-    def create_board(self, title: str, owner_id: str, **kwargs) -> BoardId:
+    def create_board(self, title: str, owner_id: UserID, **kwargs) -> BoardId:
         """
         Create a new board
 
@@ -373,7 +374,7 @@ class WeKanClient:
         board_id: str,
         list_id: str,
         title: str,
-        author_id: str,
+        author_id: UserID,
         swimlane_id: str,
         description: str | None = None,
         **kwargs,
@@ -508,7 +509,7 @@ class WeKanClient:
         return [Comment.model_validate(c) for c in response.json()]
 
     def create_comment(
-        self, board_id: str, card_id: str, author_id: str, comment: str
+        self, board_id: str, card_id: str, author_id: UserID, comment: str
     ) -> CommentId:
         """
         Add a comment to a card
