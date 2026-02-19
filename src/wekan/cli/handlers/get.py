@@ -20,7 +20,10 @@ def handle_get_board(client, args):
 
 
 def handle_get_list(client, args):
-    not_implemented("get list")
+    result = client.get_list(args.board_id, args.list_id)
+    if result is None:
+        _not_found("List")
+    output(result, args.format)
 
 
 def handle_get_swimlane(client, args):
