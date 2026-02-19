@@ -15,7 +15,8 @@ def handle_login(args):
     def display_login_info(client: WeKanClient):
         print("Logged In")
         print(f"  Token: {client.token}")
-        print(f"  User ID: {client.user_id}")
+        if client.user_id:
+            print(f"  User ID: {client.user_id}")
 
     url = resolve_env(getattr(args, "url", None), "URL")
     token = resolve_env(getattr(args, "token", None), "TOKEN")
