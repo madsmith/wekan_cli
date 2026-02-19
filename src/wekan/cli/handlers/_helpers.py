@@ -36,7 +36,12 @@ def output(data, fmt):
     print(format_output(data, fmt))
 
 
+def error_exit(message):
+    """Print error message to stderr and exit."""
+    print(f"Error: {message}", file=sys.stderr)
+    sys.exit(1)
+
+
 def not_implemented(label):
     """Print not-implemented message and exit."""
-    print(f"Error: Not implemented: {label}", file=sys.stderr)
-    sys.exit(1)
+    error_exit(f"Not implemented: {label}")
