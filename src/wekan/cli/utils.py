@@ -11,7 +11,7 @@ def _to_serializable(data):
     if isinstance(data, list):
         return [_to_serializable(item) for item in data]
     if hasattr(data, "model_dump"):
-        return data.model_dump()
+        return data.model_dump(mode="json")
     return data
 
 
