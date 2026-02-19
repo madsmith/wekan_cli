@@ -23,6 +23,7 @@ def test_board_lifecycle(client: WeKanClient):
 
     # Get
     board = client.get_board(board_id)
+    assert board is not None, "Board not found"
     assert board.boardId == board_id
     assert board.title == "Test Board - Integration"
 
@@ -53,6 +54,7 @@ def test_list_lifecycle(client: WeKanClient):
 
         # Get
         lst = client.get_list(board_id, list_id)
+        assert lst is not None, "List not found"
         assert lst.listId == list_id
         assert lst.title == "Test List - Integration"
 
@@ -98,12 +100,14 @@ def test_card_lifecycle(client: WeKanClient):
 
         # Get
         card = client.get_card(board_id, list_id, card_id)
+        assert card is not None, "Card not found"
         assert card.cardId == card_id
         assert card.title == "Test Card - Integration"
 
         # Edit
         client.edit_card(board_id, list_id, card_id, title="Test Card - Edited")
         card = client.get_card(board_id, list_id, card_id)
+        assert card is not None, "Card not found after edit"
         assert card.title == "Test Card - Edited"
 
         # Delete
@@ -151,6 +155,7 @@ def test_checklist_lifecycle(client: WeKanClient):
 
         # Get checklist
         checklist = client.get_checklist(board_id, card_id, checklist_id)
+        assert checklist is not None, "Checklist not found"
         assert checklist.checklistId == checklist_id
         assert checklist.title == "Test Checklist"
 
@@ -168,6 +173,7 @@ def test_checklist_lifecycle(client: WeKanClient):
 
         # Get item
         item = client.get_checklist_item(board_id, card_id, checklist_id, item_id)
+        assert item is not None, "Checklist item not found"
         assert item.checklistItemId == item_id
         assert item.title == "Test Item"
 
@@ -181,12 +187,14 @@ def test_checklist_lifecycle(client: WeKanClient):
             isFinished=True,
         )
         item = client.get_checklist_item(board_id, card_id, checklist_id, item_id)
+        assert item is not None, "Checklist item not found after edit"
         assert item.title == "Test Item - Edited"
         assert item.isFinished is True
 
         # Delete item
         client.delete_checklist_item(board_id, card_id, checklist_id, item_id)
         checklist = client.get_checklist(board_id, card_id, checklist_id)
+        assert checklist is not None, "Checklist not found after item delete"
         items = getattr(checklist, "items", []) or []
         assert not any(i.checklistItemId == item_id for i in items)
 
@@ -244,6 +252,7 @@ def test_edit_card_title(client: WeKanClient, edit_card_env):
         e["board_id"], e["list1_id"], e["card_id"], title="Edit Card - New Title"
     )
     card = client.get_card(e["board_id"], e["list1_id"], e["card_id"])
+    assert card is not None, "Card not found"
     assert card.title == "Edit Card - New Title"
 
 
@@ -255,6 +264,7 @@ def test_edit_card_description(client: WeKanClient, edit_card_env):
         e["board_id"], e["list1_id"], e["card_id"], description="A new description"
     )
     card = client.get_card(e["board_id"], e["list1_id"], e["card_id"])
+    assert card is not None, "Card not found"
     assert card.description == "A new description"
 
 
@@ -266,6 +276,7 @@ def test_edit_card_move_list(client: WeKanClient, edit_card_env):
         e["board_id"], e["list1_id"], e["card_id"], newListId=e["list2_id"]
     )
     card = client.get_card(e["board_id"], e["list2_id"], e["card_id"])
+    assert card is not None, "Card not found after move"
     assert card.listId == e["list2_id"]
     # Move it back for subsequent tests
     client.edit_card(
@@ -347,6 +358,7 @@ def test_edit_checklist_item_title(client: WeKanClient, edit_checklist_item_env)
         e["checklist_id"],
         e["item_id"],
     )
+    assert item is not None, "Checklist item not found"
     assert item.title == "Renamed Item"
 
 
@@ -367,6 +379,7 @@ def test_edit_checklist_item_finish(client: WeKanClient, edit_checklist_item_env
         e["checklist_id"],
         e["item_id"],
     )
+    assert item is not None, "Checklist item not found"
     assert item.isFinished is True
 
 
@@ -387,6 +400,7 @@ def test_edit_checklist_item_unfinish(client: WeKanClient, edit_checklist_item_e
         e["checklist_id"],
         e["item_id"],
     )
+    assert item is not None, "Checklist item not found"
     assert item.isFinished is False
 
 
