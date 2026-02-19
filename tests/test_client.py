@@ -200,6 +200,196 @@ def test_checklist_lifecycle(client: WeKanClient):
         client.delete_board(board_id)
 
 
+@pytest.fixture(scope="module")
+def edit_card_env(client: WeKanClient):
+    """Shared board/list/card scaffolding for edit_card tests."""
+    assert client.user_id is not None, "User ID is required"
+
+    board = client.create_board("Test Board - Edit Card", client.user_id)
+    board_id = board.boardId
+
+    list1 = client.create_list(board_id, "List 1")
+    list2 = client.create_list(board_id, "List 2")
+
+    swimlanes = client.get_swimlanes(board_id)
+    swimlane_id = swimlanes[0].swimlaneId
+
+    card = client.create_card(
+        board_id,
+        list1.listId,
+        "Edit Card - Original",
+        author_id=client.user_id,
+        swimlane_id=swimlane_id,
+    )
+
+    yield {
+        "board_id": board_id,
+        "list1_id": list1.listId,
+        "list2_id": list2.listId,
+        "card_id": card.cardId,
+        "swimlane_id": swimlane_id,
+    }
+
+    client.delete_board(board_id)
+
+
+EDIT_CARD_DEPS = ["test_board_lifecycle", "test_list_lifecycle", "test_card_lifecycle"]
+
+
+@pytest.mark.integration
+@pytest.mark.dependency(depends=EDIT_CARD_DEPS)
+def test_edit_card_title(client: WeKanClient, edit_card_env):
+    e = edit_card_env
+    client.edit_card(
+        e["board_id"], e["list1_id"], e["card_id"], title="Edit Card - New Title"
+    )
+    card = client.get_card(e["board_id"], e["list1_id"], e["card_id"])
+    assert card.title == "Edit Card - New Title"
+
+
+@pytest.mark.integration
+@pytest.mark.dependency(depends=EDIT_CARD_DEPS)
+def test_edit_card_description(client: WeKanClient, edit_card_env):
+    e = edit_card_env
+    client.edit_card(
+        e["board_id"], e["list1_id"], e["card_id"], description="A new description"
+    )
+    card = client.get_card(e["board_id"], e["list1_id"], e["card_id"])
+    assert card.description == "A new description"
+
+
+@pytest.mark.integration
+@pytest.mark.dependency(depends=EDIT_CARD_DEPS)
+def test_edit_card_move_list(client: WeKanClient, edit_card_env):
+    e = edit_card_env
+    client.edit_card(
+        e["board_id"], e["list1_id"], e["card_id"], newListId=e["list2_id"]
+    )
+    card = client.get_card(e["board_id"], e["list2_id"], e["card_id"])
+    assert card.listId == e["list2_id"]
+    # Move it back for subsequent tests
+    client.edit_card(
+        e["board_id"], e["list2_id"], e["card_id"], newListId=e["list1_id"]
+    )
+
+
+@pytest.mark.integration
+@pytest.mark.dependency(depends=EDIT_CARD_DEPS)
+def test_edit_card_archive(client: WeKanClient, edit_card_env):
+    e = edit_card_env
+    client.edit_card(e["board_id"], e["list1_id"], e["card_id"], archive=True)
+    card = client.get_card(e["board_id"], e["list1_id"], e["card_id"])
+    assert card is None
+
+
+@pytest.fixture(scope="module")
+def edit_checklist_item_env(client: WeKanClient):
+    """Shared board/list/card/checklist/item scaffolding for edit_checklist_item tests."""
+    assert client.user_id is not None, "User ID is not set"
+    board = client.create_board("Test Board - Edit Checklist Item", client.user_id)
+    board_id = board.boardId
+
+    lst = client.create_list(board_id, "List 1")
+    list_id = lst.listId
+
+    swimlanes = client.get_swimlanes(board_id)
+    swimlane_id = swimlanes[0].swimlaneId
+
+    card = client.create_card(
+        board_id,
+        list_id,
+        "Card for Checklist Item Edits",
+        author_id=client.user_id,
+        swimlane_id=swimlane_id,
+    )
+    card_id = card.cardId
+
+    checklist = client.create_checklist(board_id, card_id, "Checklist for Item Edits")
+    checklist_id = checklist.checklistId
+
+    item = client.create_checklist_item(
+        board_id, card_id, checklist_id, "Original Item"
+    )
+    item_id = item.checklistItemId
+
+    yield {
+        "board_id": board_id,
+        "card_id": card_id,
+        "checklist_id": checklist_id,
+        "item_id": item_id,
+    }
+
+    client.delete_board(board_id)
+
+
+EDIT_CHECKLIST_ITEM_DEPS = [
+    "test_board_lifecycle",
+    "test_list_lifecycle",
+    "test_card_lifecycle",
+    "test_checklist_lifecycle",
+]
+
+
+@pytest.mark.integration
+@pytest.mark.dependency(depends=EDIT_CHECKLIST_ITEM_DEPS)
+def test_edit_checklist_item_title(client: WeKanClient, edit_checklist_item_env):
+    e = edit_checklist_item_env
+    client.edit_checklist_item(
+        e["board_id"],
+        e["card_id"],
+        e["checklist_id"],
+        e["item_id"],
+        title="Renamed Item",
+    )
+    item = client.get_checklist_item(
+        e["board_id"],
+        e["card_id"],
+        e["checklist_id"],
+        e["item_id"],
+    )
+    assert item.title == "Renamed Item"
+
+
+@pytest.mark.integration
+@pytest.mark.dependency(depends=EDIT_CHECKLIST_ITEM_DEPS)
+def test_edit_checklist_item_finish(client: WeKanClient, edit_checklist_item_env):
+    e = edit_checklist_item_env
+    client.edit_checklist_item(
+        e["board_id"],
+        e["card_id"],
+        e["checklist_id"],
+        e["item_id"],
+        isFinished=True,
+    )
+    item = client.get_checklist_item(
+        e["board_id"],
+        e["card_id"],
+        e["checklist_id"],
+        e["item_id"],
+    )
+    assert item.isFinished is True
+
+
+@pytest.mark.integration
+@pytest.mark.dependency(depends=EDIT_CHECKLIST_ITEM_DEPS)
+def test_edit_checklist_item_unfinish(client: WeKanClient, edit_checklist_item_env):
+    e = edit_checklist_item_env
+    client.edit_checklist_item(
+        e["board_id"],
+        e["card_id"],
+        e["checklist_id"],
+        e["item_id"],
+        isFinished=False,
+    )
+    item = client.get_checklist_item(
+        e["board_id"],
+        e["card_id"],
+        e["checklist_id"],
+        e["item_id"],
+    )
+    assert item.isFinished is False
+
+
 CLEANUP_BOARDS = []
 
 

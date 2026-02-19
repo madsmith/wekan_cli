@@ -147,7 +147,7 @@ class WeKanClient:
         self._check_response(response)
         return [BoardListing.model_validate(board) for board in response.json()]
 
-    def get_board(self, board_id: str) -> BoardDetails:
+    def get_board(self, board_id: str) -> BoardDetails | None:
         """
         Get details of a specific board
 
@@ -155,11 +155,13 @@ class WeKanClient:
             board_id: ID of the board
 
         Returns:
-            Board details
+            Board details, or None if not found
         """
         url = f"{self.base_url}/api/boards/{board_id}"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
+        if not response.text:
+            return None
         return BoardDetails.model_validate(response.json())
 
     def get_lists(self, board_id: str) -> list[List]:
@@ -208,7 +210,7 @@ class WeKanClient:
         self._check_response(response)
         return [CardSummary.model_validate(card) for card in response.json()]
 
-    def get_card(self, board_id: str, list_id: str, card_id: str) -> CardDetails:
+    def get_card(self, board_id: str, list_id: str, card_id: str) -> CardDetails | None:
         """
         Get details of a specific card
 
@@ -218,11 +220,13 @@ class WeKanClient:
             card_id: ID of the card
 
         Returns:
-            Card details
+            Card details, or None if not found
         """
         url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards/{card_id}"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
+        if not response.text:
+            return None
         return CardDetails.model_validate(response.json())
 
     def create_board(self, title: str, owner_id: str, **kwargs) -> BoardId:
@@ -271,7 +275,7 @@ class WeKanClient:
         self._check_response(response)
         return ListId.model_validate(response.json())
 
-    def get_list(self, board_id: str, list_id: str) -> List:
+    def get_list(self, board_id: str, list_id: str) -> List | None:
         """
         Get a specific list
 
@@ -280,11 +284,13 @@ class WeKanClient:
             list_id: ID of the list
 
         Returns:
-            List details
+            List details, or None if not found
         """
         url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
+        if not response.text:
+            return None
         return List.model_validate(response.json())
 
     def delete_list(self, board_id: str, list_id: str) -> None:
@@ -353,6 +359,8 @@ class WeKanClient:
         """
 
         previous_card = self.get_card(board_id, list_id, card_id)
+        if previous_card is None:
+            raise ValueError(f"Card {card_id} not found")
 
         if "newBoardId" not in kwargs:
             kwargs["newBoardId"] = board_id
@@ -399,7 +407,7 @@ class WeKanClient:
         self._check_response(response)
         return [CardSummary.model_validate(card) for card in response.json()]
 
-    def get_card_by_id(self, card_id: str) -> CardDetails:
+    def get_card_by_id(self, card_id: str) -> CardDetails | None:
         """
         Get card details by card ID only
 
@@ -407,11 +415,13 @@ class WeKanClient:
             card_id: ID of the card
 
         Returns:
-            Card details
+            Card details, or None if not found
         """
         url = f"{self.base_url}/api/cards/{card_id}"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
+        if not response.text:
+            return None
         return CardDetails.model_validate(response.json())
 
     def get_comments(self, board_id: str, card_id: str) -> list[Comment]:
@@ -492,7 +502,7 @@ class WeKanClient:
 
     def get_checklist(
         self, board_id: str, card_id: str, checklist_id: str
-    ) -> ChecklistDetails:
+    ) -> ChecklistDetails | None:
         """
         Get details of a specific checklist
 
@@ -502,11 +512,13 @@ class WeKanClient:
             checklist_id: ID of the checklist
 
         Returns:
-            Checklist details with items
+            Checklist details with items, or None if not found
         """
         url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/checklists/{checklist_id}"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
+        if not response.text:
+            return None
         return ChecklistDetails.model_validate(response.json())
 
     def create_checklist_item(
@@ -561,7 +573,7 @@ class WeKanClient:
 
     def get_checklist_item(
         self, board_id: str, card_id: str, checklist_id: str, item_id: str
-    ) -> ChecklistItemDetails:
+    ) -> ChecklistItemDetails | None:
         """
         Get a checklist item
 
@@ -572,11 +584,13 @@ class WeKanClient:
             item_id: ID of the item
 
         Returns:
-            Checklist item details
+            Checklist item details, or None if not found
         """
         url = f"{self.base_url}/api/boards/{board_id}/cards/{card_id}/checklists/{checklist_id}/items/{item_id}"
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
+        if not response.text:
+            return None
         return ChecklistItemDetails.model_validate(response.json())
 
     def edit_checklist_item(
