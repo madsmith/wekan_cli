@@ -3,6 +3,7 @@ WeKan CLI - Command line interface for WeKan REST API
 """
 
 import argparse
+import os
 import sys
 
 from pydantic import ValidationError
@@ -379,8 +380,8 @@ def build_parser():
         "--format",
         dest="format",
         choices=["json", "pretty", "simple"],
-        default="json",
-        help="Output format (default: json)",
+        default=None,
+        help="Output format (default: json, env: WEKAN_OUTPUT_FORMAT)",
     )
 
     conn = parser.add_argument_group("connection options")
@@ -421,6 +422,13 @@ def build_parser():
 def main():
     parser = build_parser()
     args = parser.parse_args()
+
+    if args.format is None:
+        env_fmt = os.getenv("WEKAN_OUTPUT_FORMAT", "json").lower()
+        if env_fmt in ("json", "pretty", "simple"):
+            args.format = env_fmt
+        else:
+            args.format = "json"
 
     if not args.action:
         parser.print_help()
