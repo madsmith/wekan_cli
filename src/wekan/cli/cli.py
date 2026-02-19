@@ -40,6 +40,7 @@ from .handlers import (
     handle_list_lists,
     handle_list_swimlanes,
     handle_list_users,
+    handle_login,
 )
 from .utils import resolve_env
 
@@ -395,6 +396,14 @@ def build_parser():
     conn.add_argument("--token", metavar="TOKEN", help="Auth token (env: WEKAN_TOKEN)")
 
     actions = parser.add_subparsers(dest="action", title="actions", metavar="ACTION")
+    p = actions.add_parser("login", help="Authenticate and print token")
+    p.add_argument(
+        "--force",
+        action="store_true",
+        default=False,
+        help="Login with username/password even if a token is available",
+    )
+    p.set_defaults(handler=handle_login)
     _build_parser_action_get(actions)
     _build_parser_action_list(actions)
     _build_parser_action_create(actions)
@@ -423,8 +432,11 @@ def main():
         sys.exit(0)
 
     try:
-        client = create_client(args)
-        handler(client, args)
+        if args.action == "login":
+            handler(args)
+        else:
+            client = create_client(args)
+            handler(client, args)
     except WeKanAPIError as e:
         print(f"Error: {e.error}", file=sys.stderr)
         sys.exit(1)

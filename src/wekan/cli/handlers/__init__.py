@@ -38,6 +38,7 @@ from .list import (
     handle_list_swimlanes,
     handle_list_users,
 )
+from .login import handle_login
 
 __all__ = [
     "handle_create_board",
@@ -70,4 +71,5 @@ __all__ = [
     "handle_list_lists",
     "handle_list_swimlanes",
     "handle_list_users",
+    "handle_login",
 ]

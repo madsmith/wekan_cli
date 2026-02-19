@@ -96,7 +96,7 @@ class WeKanClient:
         Returns:
             Response containing authentication token
         """
-        if not self.username or not self.password:
+        if not self.token and (not self.username or not self.password):
             raise ValueError("Username and password required for login")
 
         url = f"{self.base_url}/users/login"
