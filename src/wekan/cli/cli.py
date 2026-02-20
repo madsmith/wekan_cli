@@ -53,6 +53,7 @@ from .handlers import (
     handle_list_cards,
     handle_list_checklists,
     handle_list_comments,
+    handle_list_labels,
     handle_list_lists,
     handle_list_swimlanes,
     handle_list_users,
@@ -286,6 +287,14 @@ def _build_parser_action_list(actions):
     )
     p.add_argument("user_id", metavar="USER_ID", nargs="?", help="Filter by user ID")
     p.set_defaults(handler=handle_list_boards)
+
+    p = types.add_parser(
+        "labels",
+        help="List labels on a board",
+        description="List all labels defined on a board.",
+    )
+    p.add_argument("board_id", metavar="BOARD_ID")
+    p.set_defaults(handler=handle_list_labels)
 
     p = types.add_parser(
         "lists",

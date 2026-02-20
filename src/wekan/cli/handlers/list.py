@@ -2,7 +2,14 @@
 Handlers for the 'list' action.
 """
 
-from ._helpers import output, resolve_card
+from ._helpers import not_found, output, resolve_card
+
+
+def handle_list_labels(client, args):
+    board = client.get_board(args.board_id)
+    if board is None:
+        not_found(f"Board {args.board_id}")
+    output(board.labels or [], args.format)
 
 
 def handle_list_boards(client, args):
