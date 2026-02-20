@@ -469,6 +469,18 @@ def build_parser():
     actions = parser.add_subparsers(dest="action", title="actions", metavar="ACTION")
     p = actions.add_parser("login", help="Authenticate and print token")
     p.add_argument(
+        "--username",
+        metavar="USER",
+        default=argparse.SUPPRESS,
+        help="Username (env: WEKAN_USERNAME)",
+    )
+    p.add_argument(
+        "--password",
+        metavar="PASS",
+        default=argparse.SUPPRESS,
+        help="Password (env: WEKAN_PASSWORD)",
+    )
+    p.add_argument(
         "--force",
         action="store_true",
         default=False,
