@@ -9,7 +9,7 @@ description = "Command line client for WeKan REST API"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "madsmith"}
+    {name = "Martin Smith", email = "msmith@bitmonster.org"}
 ]
 requires-python = ">=3.8"
 dependencies = [
