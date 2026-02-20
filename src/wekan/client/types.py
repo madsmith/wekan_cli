@@ -139,7 +139,7 @@ class BoardMember(WeKanModel):
 
 
 class BoardDetails(BoardId):
-    model_config = ConfigDict(partial_field_def=True)
+    model_config = ConfigDict(json_schema_extra={"partial_field_def": True})
     title: str = Field(description="Board title")
     description: str | None = Field(default=None, description="Board description")
     color: BoardColor | None = Field(default=None, description="Board theme color")
@@ -305,7 +305,7 @@ class Vote(WeKanModel):
 
 
 class CardDetails(CardId):
-    model_config = ConfigDict(partial_field_def=True)
+    model_config = ConfigDict(json_schema_extra={"partial_field_def": True})
     title: str = Field(description="Card title")
     description: str | None = Field(
         default=None, description="Card description (markdown)"
@@ -404,7 +404,7 @@ class ChecklistItem(ChecklistItemId):
 
 
 class ChecklistDetails(ChecklistId):
-    model_config = ConfigDict(partial_field_def=True)
+    model_config = ConfigDict(json_schema_extra={"partial_field_def": True})
     cardId: str | None = Field(default=None, description="Card ID")
     title: str = Field(description="Checklist title")
     finishedAt: str | None = Field(

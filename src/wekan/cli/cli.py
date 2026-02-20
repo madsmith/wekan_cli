@@ -161,7 +161,8 @@ def _fields_help(model, label):
                 _collect(ann, depth + 2)
 
     _collect(model)
-    if model.model_config.get("partial_field_def"):
+    schema_extra = model.model_config.get("json_schema_extra") or {}
+    if schema_extra.get("partial_field_def"):
         lines.append("")
         lines.append("Partial field list, consult API docs for full object schema")
     return "\n".join(lines)
