@@ -46,6 +46,7 @@ from .handlers import (
     handle_get_comment,
     handle_get_list,
     handle_get_swimlane,
+    handle_get_user,
     handle_list_boards,
     handle_list_cards,
     handle_list_checklists,
@@ -192,6 +193,13 @@ def _build_parser_action_get(actions):
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     types = get_parser.add_subparsers(dest="type", title="types", metavar="TYPE")
+
+    p = types.add_parser(
+        "user",
+        description="Get user details on the current session user.",
+        help="Get current user details",
+    )
+    p.set_defaults(handler=handle_get_user)
 
     p = types.add_parser("board", help="Get board details")
     p.add_argument("board_id", metavar="BOARD_ID")

@@ -29,6 +29,7 @@ from .get import (
     handle_get_comment,
     handle_get_list,
     handle_get_swimlane,
+    handle_get_user,
 )
 from .list import (
     handle_list_boards,
@@ -66,6 +67,7 @@ __all__ = [
     "handle_get_comment",
     "handle_get_list",
     "handle_get_swimlane",
+    "handle_get_user",
     "handle_list_boards",
     "handle_list_cards",
     "handle_list_checklists",

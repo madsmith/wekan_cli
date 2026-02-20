@@ -5,6 +5,11 @@ Handlers for the 'get' action.
 from ._helpers import not_found, output, resolve_card
 
 
+def handle_get_user(client, args):
+    result = client.get_user()
+    output(result, args.format)
+
+
 def handle_get_board(client, args):
     result = client.get_board(args.board_id)
     if result is None:

@@ -138,6 +138,43 @@ class BoardMember(WeKanModel):
     isWorker: bool | None = Field(default=None, description="Whether user is a worker")
 
 
+class Email(WeKanModel):
+    address: str = Field(description="Email address")
+    verified: bool = Field(description="Whether the email is verified")
+
+
+class BoardMembership(BoardId):
+    isAdmin: bool | None = Field(
+        default=None, description="Whether the user is an admin"
+    )
+    isActive: bool | None = Field(
+        default=None, description="Whether the membership is active"
+    )
+    isWorker: bool | None = Field(
+        default=None, description="Whether the user is a worker"
+    )
+
+
+class UserDetails(User):
+    model_config = ConfigDict(json_schema_extra={"partial_field_def": True})
+    createdAt: str | None = Field(default=None, description="Date user was created")
+    emails: list[Email] | None = Field(
+        default=None, description="List of email addresses"
+    )
+    isAdmin: bool | None = Field(
+        default=None, description="Whether the user is an Admin"
+    )
+    modifiedAt: str | None = Field(
+        default=None, description="Date user was last modified"
+    )
+    authenticationMethod: str | None = Field(
+        default=None, description="Authentication method"
+    )
+    boards: list[BoardMembership] | None = Field(
+        default=None, description="List of board memberships"
+    )
+
+
 class BoardDetails(BoardId):
     model_config = ConfigDict(json_schema_extra={"partial_field_def": True})
     title: str = Field(description="Board title")

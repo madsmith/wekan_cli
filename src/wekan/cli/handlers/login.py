@@ -33,8 +33,8 @@ def handle_login(args):
     if token and not force:
         client = WeKanClient(url, token=token)
         try:
-            # Test token authorization
-            client.get_boards()
+            user = client.get_user()
+            client.user_id = user.userId
             display_login_info(client)
             return
         except Exception:

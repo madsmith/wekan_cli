@@ -30,6 +30,7 @@ from .types import (
     SwimlaneId,
     SwimlaneInfo,
     User,
+    UserDetails,
     UserID,
 )
 
@@ -124,6 +125,18 @@ class WeKanClient:
         response = self.session.get(url, timeout=self.timeout)
         self._check_response(response)
         return [User.model_validate(user) for user in response.json()]
+
+    def get_user(self) -> UserDetails:
+        """
+        Get the current authenticated user's details.
+
+        Returns:
+            User details
+        """
+        url = f"{self.base_url}/api/user"
+        response = self.session.get(url, timeout=self.timeout)
+        self._check_response(response)
+        return UserDetails.model_validate(response.json())
 
     def get_boards(self) -> list[BoardInfo]:
         """
