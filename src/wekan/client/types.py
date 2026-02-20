@@ -92,8 +92,11 @@ class LoginResponse(WeKanModel):
 # ---------------------------------------------------------------------------
 
 
-class BoardLabel(WeKanModel):
+class LabelId(WeKanModel):
     labelId: str = Field(validation_alias="_id", description="Label ID")
+
+
+class BoardLabel(LabelId):
     name: str = Field(description="Label name")
     color: str = Field(description="Label color")
 

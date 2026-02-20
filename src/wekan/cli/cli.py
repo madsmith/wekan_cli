@@ -14,6 +14,7 @@ from ..client import (
     CardDetails,
     ChecklistDetails,
     ChecklistItemDetails,
+    Color,
     CommentDetails,
     ListDetails,
     SwimlaneDetails,
@@ -28,6 +29,7 @@ from .handlers import (
     handle_create_checklist,
     handle_create_checklist_item,
     handle_create_comment,
+    handle_create_label,
     handle_create_list,
     handle_create_swimlane,
     handle_delete_board,
@@ -177,6 +179,7 @@ CARD_FIELDS_HELP = _fields_help(CardDetails, "card fields")
 COMMENT_FIELDS_HELP = _fields_help(CommentDetails, "comment fields")
 CHECKLIST_FIELDS_HELP = _fields_help(ChecklistDetails, "checklist fields")
 CHECKLIST_ITEM_FIELDS_HELP = _fields_help(ChecklistItemDetails, "checklist-item fields")
+LABEL_COLORS_HELP = "colors:\n  " + ", ".join(c.value for c in Color)
 
 
 # ---------------------------------------------------------------------------
@@ -360,6 +363,18 @@ def _build_parser_action_create(actions):
     p.add_argument("owner_id", metavar="OWNER_ID")
     add_data_field_options(p)
     p.set_defaults(handler=handle_create_board)
+
+    p = types.add_parser(
+        "label",
+        help="Add a label to a board",
+        description="Add a label to the board with a name and color to a board.",
+        epilog=LABEL_COLORS_HELP,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p.add_argument("board_id", metavar="BOARD_ID")
+    p.add_argument("name", metavar="NAME")
+    p.add_argument("color", metavar="COLOR", choices=[c.value for c in Color])
+    p.set_defaults(handler=handle_create_label)
 
     p = types.add_parser(
         "list",

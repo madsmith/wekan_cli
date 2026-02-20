@@ -22,6 +22,7 @@ from .types import (
     Comment,
     CommentDetails,
     CommentId,
+    LabelId,
     ListDetails,
     ListId,
     ListInfo,
@@ -330,6 +331,37 @@ class WeKanClient:
         response = self.session.delete(url, timeout=self.timeout)
         self._check_response(response)
         return BoardId.model_validate(response.json())
+
+    def add_board_label(self, board_id: str, name: str, color: str) -> str | None:
+        """
+        Add a label to a board.
+
+        Args:
+            board_id: ID of the board
+            name: Label name
+            color: Label color
+
+        Returns:
+            Created label ID string, or None if the label already exists
+        """
+        url = f"{self.base_url}/api/boards/{board_id}/labels"
+        payload = {"label": {"name": name, "color": color}}
+        response = self.session.put(url, json=payload, timeout=self.timeout)
+        self._check_response(response)
+        text = response.text.strip()
+        if not text:
+            return None
+        if text == "{}":
+            raise WeKanAPIError(
+                APIError(
+                    error="unknown",
+                    reason="unknown",
+                    message="Server returned empty object",
+                    statusCode=response.status_code,
+                )
+            )
+        # API returns the label ID as a bare string
+        return text
 
     def create_list(self, board_id: str, title: str) -> ListId:
         """

@@ -2,7 +2,14 @@
 Handlers for the 'create' action.
 """
 
-from ._helpers import merge_fields_with_stdin, not_found, output
+from ._helpers import error_exit, merge_fields_with_stdin, not_found, output
+
+
+def handle_create_label(client, args):
+    label_id = client.add_board_label(args.board_id, args.name, args.color)
+    if label_id is None:
+        error_exit("Label already exists on this board.")
+    output({"labelId": label_id}, args.format)
 
 
 def handle_create_board(client, args):

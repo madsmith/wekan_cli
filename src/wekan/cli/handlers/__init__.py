@@ -5,6 +5,7 @@ from .create import (
     handle_create_checklist,
     handle_create_checklist_item,
     handle_create_comment,
+    handle_create_label,
     handle_create_list,
     handle_create_swimlane,
 )
@@ -49,6 +50,7 @@ __all__ = [
     "handle_create_checklist",
     "handle_create_checklist_item",
     "handle_create_comment",
+    "handle_create_label",
     "handle_create_list",
     "handle_create_swimlane",
     "handle_delete_board",
