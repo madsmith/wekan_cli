@@ -237,7 +237,12 @@ def _build_parser_action_list(actions):
     )
     types = list_parser.add_subparsers(dest="type", title="types", metavar="TYPE")
 
-    p = types.add_parser("boards", help="List boards")
+    p = types.add_parser(
+        "boards",
+        help="List boards",
+        epilog="Listing all boards without USER_ID requires Admin privileges.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     p.add_argument("user_id", metavar="USER_ID", nargs="?", help="Filter by user ID")
     p.set_defaults(handler=handle_list_boards)
 
@@ -258,7 +263,12 @@ def _build_parser_action_list(actions):
     )
     p.set_defaults(handler=handle_list_cards)
 
-    p = types.add_parser("users", help="List all users")
+    p = types.add_parser(
+        "users",
+        help="List all users",
+        epilog="This command requires Admin privileges.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     p.set_defaults(handler=handle_list_users)
 
     p = types.add_parser("comments", help="List comments on a card")
@@ -401,7 +411,12 @@ def _build_parser_action_delete(actions):
     )
     types = delete_parser.add_subparsers(dest="type", title="types", metavar="TYPE")
 
-    p = types.add_parser("board", help="Delete a board")
+    p = types.add_parser(
+        "board",
+        help="Delete a board",
+        epilog="This command requires Admin privileges.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     p.add_argument("board_id", metavar="BOARD_ID")
     p.set_defaults(handler=handle_delete_board)
 
