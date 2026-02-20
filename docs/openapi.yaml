@@ -1,0 +1,2837 @@
+openapi: 3.0.3
+info:
+  title: WeKan REST API
+  description: |
+    REST API for WeKan — the open-source kanban board.
+
+    ## Authentication
+
+    Most endpoints require two HTTP headers for authentication:
+
+    | Header | Description |
+    |--------|-------------|
+    | `X-User-Id` | The user ID returned from the login endpoint |
+    | `X-Auth-Token` | The auth token returned from the login endpoint |
+
+    To obtain these credentials, call `POST /users/login` with a username/email
+    and password. Some endpoints (login, register, public-board export) do not
+    require authentication.
+  version: 8.33.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: '{protocol}://{host}:{port}'
+    variables:
+      protocol:
+        default: http
+        enum: [http, https]
+      host:
+        default: localhost
+      port:
+        default: '3000'
+
+security:
+  - apiKeyAuth: []
+
+tags:
+  - name: Authentication
+    description: Login and registration
+  - name: Users
+    description: User management (admin only for most operations)
+  - name: Boards
+    description: Board CRUD and membership
+  - name: Lists
+    description: Lists within boards
+  - name: Swimlanes
+    description: Swimlanes within boards
+  - name: Cards
+    description: Cards within lists and swimlanes
+  - name: Checklists
+    description: Checklists on cards
+  - name: Checklist Items
+    description: Items within checklists
+  - name: Card Comments
+    description: Comments on cards
+  - name: Custom Fields
+    description: Custom field definitions and dropdown items
+  - name: Integrations
+    description: Outgoing webhook integrations
+  - name: Export
+    description: Board and attachment JSON export
+
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Auth-Token
+      description: Auth token from POST /users/login
+    userIdAuth:
+      type: apiKey
+      in: header
+      name: X-User-Id
+      description: User ID from POST /users/login
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        token:
+          type: string
+        tokenExpires:
+          type: string
+          format: date-time
+
+    RegisterRequest:
+      type: object
+      required: [username, password, email]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        email:
+          type: string
+
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        username:
+          type: string
+        emails:
+          type: array
+          items:
+            type: object
+            properties:
+              address:
+                type: string
+              verified:
+                type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        profile:
+          type: object
+        isAdmin:
+          type: boolean
+        boards:
+          type: array
+          items:
+            type: object
+            properties:
+              boardId:
+                type: string
+              isAdmin:
+                type: boolean
+              isActive:
+                type: boolean
+
+    UserSummary:
+      type: object
+      properties:
+        _id:
+          type: string
+        username:
+          type: string
+
+    Board:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        permission:
+          type: string
+          enum: [public, private]
+        color:
+          type: string
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoardMember'
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        createdAt:
+          type: string
+          format: date-time
+        modifiedAt:
+          type: string
+          format: date-time
+
+    BoardSummary:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+
+    BoardMember:
+      type: object
+      properties:
+        userId:
+          type: string
+        isAdmin:
+          type: boolean
+        isActive:
+          type: boolean
+        isNoComments:
+          type: boolean
+        isCommentOnly:
+          type: boolean
+        isWorker:
+          type: boolean
+
+    Label:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        color:
+          type: string
+
+    List:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        boardId:
+          type: string
+        sort:
+          type: number
+        archived:
+          type: boolean
+        wipLimit:
+          type: object
+        color:
+          type: string
+        starred:
+          type: boolean
+
+    ListSummary:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+
+    Swimlane:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        boardId:
+          type: string
+        sort:
+          type: number
+        archived:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    SwimlaneSummary:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+
+    Card:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        boardId:
+          type: string
+        listId:
+          type: string
+        swimlaneId:
+          type: string
+        sort:
+          type: number
+        members:
+          type: array
+          items:
+            type: string
+        assignees:
+          type: array
+          items:
+            type: string
+        labelIds:
+          type: array
+          items:
+            type: string
+        customFields:
+          type: array
+          items:
+            type: object
+            properties:
+              _id:
+                type: string
+              value:
+                {}
+        receivedAt:
+          type: string
+          format: date-time
+        startAt:
+          type: string
+          format: date-time
+        dueAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        archived:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    CardSummary:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+
+    Checklist:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        cardId:
+          type: string
+        sort:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChecklistItemSummary'
+
+    ChecklistSummary:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+
+    ChecklistItem:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        checklistId:
+          type: string
+        cardId:
+          type: string
+        isFinished:
+          type: boolean
+        sort:
+          type: number
+
+    ChecklistItemSummary:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        isFinished:
+          type: boolean
+
+    CardComment:
+      type: object
+      properties:
+        _id:
+          type: string
+        text:
+          type: string
+        cardId:
+          type: string
+        boardId:
+          type: string
+        userId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    CardCommentSummary:
+      type: object
+      properties:
+        _id:
+          type: string
+        comment:
+          type: string
+        authorId:
+          type: string
+
+    CustomField:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        boardIds:
+          type: array
+          items:
+            type: string
+        settings:
+          type: object
+        showOnCard:
+          type: boolean
+        automaticallyOnCard:
+          type: boolean
+        alwaysOnCard:
+          type: boolean
+        showLabelOnMiniCard:
+          type: boolean
+        showSumAtTopOfList:
+          type: boolean
+
+    CustomFieldSummary:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+
+    Integration:
+      type: object
+      properties:
+        _id:
+          type: string
+        enabled:
+          type: boolean
+        title:
+          type: string
+        url:
+          type: string
+        boardId:
+          type: string
+        activities:
+          type: array
+          items:
+            type: string
+        userId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Attachment:
+      type: object
+      properties:
+        attachmentId:
+          type: string
+        attachmentName:
+          type: string
+        attachmentType:
+          type: string
+        url:
+          type: string
+        urlDownload:
+          type: string
+        boardId:
+          type: string
+        swimlaneId:
+          type: string
+        listId:
+          type: string
+        cardId:
+          type: string
+
+    IdResponse:
+      type: object
+      properties:
+        _id:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+paths:
+  # ── Authentication ──────────────────────────────────────────────────
+  /users/login:
+    post:
+      tags: [Authentication]
+      summary: Login
+      description: Authenticate with username/email and password to obtain userId and authToken.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+
+  /users/register:
+    post:
+      tags: [Authentication]
+      summary: Register
+      description: Register a new user account.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  # ── Users ───────────────────────────────────────────────────────────
+  /api/user:
+    get:
+      tags: [Users]
+      summary: Get current user
+      description: Returns the currently authenticated user with board membership info.
+      responses:
+        '200':
+          description: Current user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /api/users:
+    get:
+      tags: [Users]
+      summary: Get all users
+      description: Returns all users. Admin only.
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserSummary'
+
+  /api/users/{userId}:
+    get:
+      tags: [Users]
+      summary: Get a user
+      description: Get a user by ID or username. Admin only.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The user ID or username
+      responses:
+        '200':
+          description: User data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      tags: [Users]
+      summary: Edit a user
+      description: |
+        Edit a user. Admin only. Possible actions:
+        - `takeOwnership` — admin takes ownership of all user's boards
+        - `disableLogin` — disable the user's login
+        - `enableLogin` — re-enable login
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [takeOwnership, disableLogin, enableLogin]
+      responses:
+        '200':
+          description: Updated user or list of boards
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      tags: [Users]
+      summary: Delete a user
+      description: Delete a user by ID. Admin only.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted user ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/users/:
+    post:
+      tags: [Users]
+      summary: Create a user
+      description: Create a new user. Admin only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password]
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Created user ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/createtoken/{userId}:
+    post:
+      tags: [Users]
+      summary: Create a user token
+      description: Generate a login token for the given user. Admin only.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User ID and new auth token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  authToken:
+                    type: string
+
+  /api/deletetoken:
+    post:
+      tags: [Users]
+      summary: Delete user token(s)
+      description: Delete one or all login tokens for a user. Admin only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId:
+                  type: string
+                token:
+                  type: string
+                  description: Specific hashed token to delete. Omit to delete all.
+      responses:
+        '200':
+          description: Confirmation message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  # ── Boards ──────────────────────────────────────────────────────────
+  /api/users/{userId}/boards:
+    get:
+      tags: [Boards]
+      summary: Get all boards for a user
+      description: Get all non-archived boards the user is a member of.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of boards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BoardSummary'
+
+  /api/boards:
+    get:
+      tags: [Boards]
+      summary: Get all public boards
+      description: Returns all public boards. Admin only.
+      responses:
+        '200':
+          description: List of public boards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BoardSummary'
+    post:
+      tags: [Boards]
+      summary: Create a board
+      description: |
+        Create a new board. Color choices: `belize`, `nephritis`, `pomegranate`,
+        `pumpkin`, `wisteria`, `moderatepink`, `strongcyan`, `limegreen`,
+        `midnight`, `dark`, `relax`, `corteza`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, owner]
+              properties:
+                title:
+                  type: string
+                owner:
+                  type: string
+                  description: User ID of the board owner
+                isAdmin:
+                  type: boolean
+                  default: true
+                isActive:
+                  type: boolean
+                  default: true
+                isNoComments:
+                  type: boolean
+                  default: false
+                isCommentOnly:
+                  type: boolean
+                  default: false
+                isWorker:
+                  type: boolean
+                  default: false
+                permission:
+                  type: string
+                  enum: [public, private]
+                  default: private
+                color:
+                  type: string
+                  default: belize
+      responses:
+        '200':
+          description: New board ID and default swimlane ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  defaultSwimlaneId:
+                    type: string
+
+  /api/boards_count:
+    get:
+      tags: [Boards]
+      summary: Get boards count
+      description: Get counts of public and private boards. Admin only.
+      responses:
+        '200':
+          description: Board counts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  private:
+                    type: integer
+                  public:
+                    type: integer
+
+  /api/boards/{boardId}:
+    get:
+      tags: [Boards]
+      summary: Get a board
+      description: Get a board by ID. Requires board access.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Full board object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Board'
+    delete:
+      tags: [Boards]
+      summary: Delete a board
+      description: Permanently delete a board. Admin only.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted board ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/boards/{boardId}/title:
+    put:
+      tags: [Boards]
+      summary: Update board title
+      description: Change the title of a board.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+      responses:
+        '200':
+          description: Updated board ID and title
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  title:
+                    type: string
+
+  /api/boards/{boardId}/labels:
+    put:
+      tags: [Boards]
+      summary: Add a label to a board
+      description: Add a new label with a name and color to the board.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [label]
+              properties:
+                label:
+                  type: object
+                  required: [color, name]
+                  properties:
+                    color:
+                      type: string
+                    name:
+                      type: string
+      responses:
+        '200':
+          description: New label ID
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /api/boards/{boardId}/copy:
+    post:
+      tags: [Boards]
+      summary: Copy a board
+      description: Copy a board to a new one. Requires board admin or wekan admin.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Title for the copy (defaults to original + suffix)
+      responses:
+        '200':
+          description: New board ID
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /api/boards/{boardId}/members/{memberId}:
+    post:
+      tags: [Boards]
+      summary: Set board member permission
+      description: Change the permission of a member of a board. Admin only.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isAdmin:
+                  type: boolean
+                isNoComments:
+                  type: boolean
+                isCommentOnly:
+                  type: boolean
+                isWorker:
+                  type: boolean
+                isNormalAssignedOnly:
+                  type: boolean
+                isCommentAssignedOnly:
+                  type: boolean
+                isReadOnly:
+                  type: boolean
+                isReadAssignedOnly:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated permission data
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/boards/{boardId}/members/{userId}/add:
+    post:
+      tags: [Boards]
+      summary: Add a member to a board
+      description: Add a new member to a board with specified roles. Admin only.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [add]
+                isAdmin:
+                  type: string
+                isNoComments:
+                  type: string
+                isCommentOnly:
+                  type: string
+                isWorker:
+                  type: string
+                isNormalAssignedOnly:
+                  type: string
+                isCommentAssignedOnly:
+                  type: string
+                isReadOnly:
+                  type: string
+                isReadAssignedOnly:
+                  type: string
+      responses:
+        '200':
+          description: Board summary
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BoardSummary'
+
+  /api/boards/{boardId}/members/{userId}/remove:
+    post:
+      tags: [Boards]
+      summary: Remove a member from a board
+      description: Remove a member from a board. Admin only.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [remove]
+      responses:
+        '200':
+          description: Board summary
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BoardSummary'
+
+  /api/boards/{boardId}/attachments:
+    get:
+      tags: [Boards]
+      summary: Get board attachments
+      description: Get all attachments for a board.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of attachments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attachment'
+
+  # ── Lists ───────────────────────────────────────────────────────────
+  /api/boards/{boardId}/lists:
+    get:
+      tags: [Lists]
+      summary: Get all lists in a board
+      description: Get all non-archived lists attached to a board.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListSummary'
+    post:
+      tags: [Lists]
+      summary: Create a list
+      description: Add a new list to a board.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                swimlaneId:
+                  type: string
+                  description: Swimlane ID (defaults to the board's default swimlane)
+      responses:
+        '200':
+          description: New list ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/boards/{boardId}/lists/{listId}:
+    get:
+      tags: [Lists]
+      summary: Get a list
+      description: Get a single non-archived list by ID.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Full list object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/List'
+    put:
+      tags: [Lists]
+      summary: Edit a list
+      description: Update title, color, wipLimit, or starred status of a list.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                color:
+                  type: string
+                wipLimit:
+                  type: object
+                starred:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated list ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+    delete:
+      tags: [Lists]
+      summary: Delete a list
+      description: Permanently delete a list from a board.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted list ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  # ── Swimlanes ───────────────────────────────────────────────────────
+  /api/boards/{boardId}/swimlanes:
+    get:
+      tags: [Swimlanes]
+      summary: Get all swimlanes
+      description: Get all non-archived swimlanes in a board.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of swimlanes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SwimlaneSummary'
+    post:
+      tags: [Swimlanes]
+      summary: Create a swimlane
+      description: Add a new swimlane to a board.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+      responses:
+        '200':
+          description: New swimlane ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/boards/{boardId}/swimlanes/{swimlaneId}:
+    get:
+      tags: [Swimlanes]
+      summary: Get a swimlane
+      description: Get a single non-archived swimlane by ID.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: swimlaneId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Full swimlane object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Swimlane'
+    put:
+      tags: [Swimlanes]
+      summary: Edit a swimlane
+      description: Update the title of a swimlane.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: swimlaneId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+      responses:
+        '200':
+          description: Updated swimlane ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+    delete:
+      tags: [Swimlanes]
+      summary: Delete a swimlane
+      description: Permanently delete a swimlane from a board.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: swimlaneId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted swimlane ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  # ── Cards ───────────────────────────────────────────────────────────
+  /api/boards/{boardId}/swimlanes/{swimlaneId}/cards:
+    get:
+      tags: [Cards]
+      summary: Get all cards in a swimlane
+      description: Get all non-archived cards in a swimlane.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: swimlaneId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                    title:
+                      type: string
+                    description:
+                      type: string
+                    listId:
+                      type: string
+                    receivedAt:
+                      type: string
+                    startAt:
+                      type: string
+                    dueAt:
+                      type: string
+                    endAt:
+                      type: string
+                    assignees:
+                      type: array
+                      items:
+                        type: string
+                    sort:
+                      type: number
+
+  /api/boards/{boardId}/lists/{listId}/cards:
+    get:
+      tags: [Cards]
+      summary: Get all cards in a list
+      description: Get all non-archived cards attached to a list.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                    title:
+                      type: string
+                    description:
+                      type: string
+                    swimlaneId:
+                      type: string
+                    receivedAt:
+                      type: string
+                    startAt:
+                      type: string
+                    dueAt:
+                      type: string
+                    endAt:
+                      type: string
+                    assignees:
+                      type: array
+                      items:
+                        type: string
+                    sort:
+                      type: number
+    post:
+      tags: [Cards]
+      summary: Create a card
+      description: Create a new card in a list.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, authorId, swimlaneId]
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                authorId:
+                  type: string
+                  description: User ID of the card creator
+                swimlaneId:
+                  type: string
+                parentId:
+                  type: string
+                members:
+                  type: array
+                  items:
+                    type: string
+                assignees:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: New card ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/cards/{cardId}:
+    get:
+      tags: [Cards]
+      summary: Get a card by card ID
+      description: Get a card by its ID (without needing board/list context).
+      parameters:
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Full card object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+
+  /api/boards/{boardId}/lists/{listId}/cards/{cardId}:
+    get:
+      tags: [Cards]
+      summary: Get a card
+      description: Get a single non-archived card by board, list, and card ID.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Full card object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+    put:
+      tags: [Cards]
+      summary: Edit a card
+      description: |
+        Update card fields. Card colors: `white`, `green`, `yellow`, `orange`,
+        `red`, `purple`, `blue`, `sky`, `lime`, `pink`, `black`, `silver`,
+        `peachpuff`, `crimson`, `plum`, `darkgreen`, `slateblue`, `magenta`,
+        `gold`, `navy`, `gray`, `saddlebrown`, `paleturquoise`, `mistyrose`, `indigo`.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                sort:
+                  type: number
+                listId:
+                  type: string
+                  description: Move card to a different list
+                parentId:
+                  type: string
+                authorId:
+                  type: string
+                labelIds:
+                  type: array
+                  items:
+                    type: string
+                swimlaneId:
+                  type: string
+                members:
+                  type: array
+                  items:
+                    type: string
+                assignees:
+                  type: array
+                  items:
+                    type: string
+                requestedBy:
+                  type: string
+                assignedBy:
+                  type: string
+                receivedAt:
+                  type: string
+                  format: date-time
+                startAt:
+                  type: string
+                  format: date-time
+                dueAt:
+                  type: string
+                  format: date-time
+                endAt:
+                  type: string
+                  format: date-time
+                spentTime:
+                  type: number
+                isOverTime:
+                  type: boolean
+                customFields:
+                  type: array
+                  items:
+                    type: object
+                color:
+                  type: string
+                vote:
+                  type: object
+                  properties:
+                    question:
+                      type: string
+                    public:
+                      type: boolean
+                    allowNonBoardMembers:
+                      type: boolean
+                poker:
+                  type: object
+                  properties:
+                    question:
+                      type: string
+                    allowNonBoardMembers:
+                      type: boolean
+      responses:
+        '200':
+          description: Updated card ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+    delete:
+      tags: [Cards]
+      summary: Delete a card
+      description: Permanently delete a card.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted card ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/boards/{boardId}/cards_count:
+    get:
+      tags: [Cards]
+      summary: Get board cards count
+      description: Get the total number of non-archived cards in a board.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cards count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  board_cards_count:
+                    type: integer
+
+  /api/boards/{boardId}/lists/{listId}/cards_count:
+    get:
+      tags: [Cards]
+      summary: Get list cards count
+      description: Get the total number of non-archived cards in a list.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cards count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  list_cards_count:
+                    type: integer
+
+  /api/boards/{boardId}/cardsByCustomField/{customFieldId}/{customFieldValue}:
+    get:
+      tags: [Cards]
+      summary: Get cards by custom field value
+      description: Get all non-archived cards matching a specific custom field value.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: customFieldId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: customFieldValue
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matching cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Card'
+
+  /api/boards/{boardId}/lists/{listId}/cards/{cardId}/customFields/{customFieldId}:
+    post:
+      tags: [Cards]
+      summary: Edit card custom field value
+      description: Set the value of a custom field on a card.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: customFieldId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [value]
+              properties:
+                value:
+                  description: The new value for the custom field
+      responses:
+        '200':
+          description: Updated card ID and custom fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  customFields:
+                    type: array
+                    items:
+                      type: object
+
+  /api/boards/{boardId}/lists/{listId}/cards/{cardId}/archive:
+    post:
+      tags: [Cards]
+      summary: Archive a card
+      description: Archive a card (soft-delete).
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Archived card
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  archived:
+                    type: boolean
+                  archivedAt:
+                    type: string
+                    format: date-time
+
+  /api/boards/{boardId}/lists/{listId}/cards/{cardId}/unarchive:
+    post:
+      tags: [Cards]
+      summary: Unarchive a card
+      description: Restore a previously archived card.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Unarchived card
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  archived:
+                    type: boolean
+
+  # ── Checklists ──────────────────────────────────────────────────────
+  /api/boards/{boardId}/cards/{cardId}/checklists:
+    get:
+      tags: [Checklists]
+      summary: Get all checklists on a card
+      description: Get all checklists attached to a card.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of checklists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChecklistSummary'
+    post:
+      tags: [Checklists]
+      summary: Create a checklist
+      description: Create a new checklist on a card, optionally with initial items.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: string
+                  description: List of item titles to add
+      responses:
+        '200':
+          description: New checklist ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/boards/{boardId}/cards/{cardId}/checklists/{checklistId}:
+    get:
+      tags: [Checklists]
+      summary: Get a checklist
+      description: Get a checklist with its items.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: checklistId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Checklist with items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checklist'
+    delete:
+      tags: [Checklists]
+      summary: Delete a checklist
+      description: Permanently remove a checklist from a card.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: checklistId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted checklist ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  # ── Checklist Items ─────────────────────────────────────────────────
+  /api/boards/{boardId}/cards/{cardId}/checklists/{checklistId}/items/{itemId}:
+    get:
+      tags: [Checklist Items]
+      summary: Get a checklist item
+      description: Get a single checklist item by ID.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: checklistId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Checklist item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChecklistItem'
+    put:
+      tags: [Checklist Items]
+      summary: Edit a checklist item
+      description: Update the title or finished state of a checklist item.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: checklistId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                isFinished:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated item ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+    delete:
+      tags: [Checklist Items]
+      summary: Delete a checklist item
+      description: Permanently remove a checklist item.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: checklistId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted item ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/boards/{boardId}/cards/{cardId}/checklists/{checklistId}/items:
+    post:
+      tags: [Checklist Items]
+      summary: Create a checklist item
+      description: Add a new item to a checklist.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: checklistId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+      responses:
+        '200':
+          description: New item ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  # ── Card Comments ───────────────────────────────────────────────────
+  /api/boards/{boardId}/cards/{cardId}/comments:
+    get:
+      tags: [Card Comments]
+      summary: Get all comments on a card
+      description: Get all comments attached to a card.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CardCommentSummary'
+    post:
+      tags: [Card Comments]
+      summary: Add a comment
+      description: Add a comment to a card.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [comment]
+              properties:
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: New comment ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/boards/{boardId}/cards/{cardId}/comments/{commentId}:
+    get:
+      tags: [Card Comments]
+      summary: Get a comment
+      description: Get a single comment by ID.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Comment object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardComment'
+    delete:
+      tags: [Card Comments]
+      summary: Delete a comment
+      description: Delete a comment from a card.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted card ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  # ── Custom Fields ───────────────────────────────────────────────────
+  /api/boards/{boardId}/custom-fields:
+    get:
+      tags: [Custom Fields]
+      summary: Get all custom fields
+      description: Get all custom field definitions for a board.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of custom fields
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomFieldSummary'
+    post:
+      tags: [Custom Fields]
+      summary: Create a custom field
+      description: Create a new custom field definition on a board.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, type]
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                  description: 'Field type: text, number, date, dropdown, checkbox, currency, stringtemplate'
+                settings:
+                  type: object
+                showOnCard:
+                  type: boolean
+                automaticallyOnCard:
+                  type: boolean
+                showLabelOnMiniCard:
+                  type: boolean
+                showSumAtTopOfList:
+                  type: boolean
+                authorId:
+                  type: string
+      responses:
+        '200':
+          description: New custom field ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/boards/{boardId}/custom-fields/{customFieldId}:
+    get:
+      tags: [Custom Fields]
+      summary: Get a custom field
+      description: Get a single custom field definition.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: customFieldId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Custom field object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomField'
+    put:
+      tags: [Custom Fields]
+      summary: Edit a custom field
+      description: Update properties of a custom field definition.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: customFieldId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                settings:
+                  type: object
+                showOnCard:
+                  type: boolean
+                automaticallyOnCard:
+                  type: boolean
+                alwaysOnCard:
+                  type: boolean
+                showLabelOnMiniCard:
+                  type: boolean
+                showSumAtTopOfList:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated field ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+    delete:
+      tags: [Custom Fields]
+      summary: Delete a custom field
+      description: Permanently delete a custom field definition.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: customFieldId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted field ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/boards/{boardId}/custom-fields/{customFieldId}/dropdown-items:
+    post:
+      tags: [Custom Fields]
+      summary: Add dropdown items
+      description: Add items to a dropdown custom field.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: customFieldId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: string
+                  description: List of item names to add
+      responses:
+        '200':
+          description: Custom field ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/boards/{boardId}/custom-fields/{customFieldId}/dropdown-items/{dropdownItemId}:
+    put:
+      tags: [Custom Fields]
+      summary: Edit a dropdown item
+      description: Rename a dropdown item in a custom field.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: customFieldId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: dropdownItemId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Dropdown item ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+    delete:
+      tags: [Custom Fields]
+      summary: Delete a dropdown item
+      description: Remove a dropdown item from a custom field.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: customFieldId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: dropdownItemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Custom field ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  # ── Integrations ────────────────────────────────────────────────────
+  /api/boards/{boardId}/integrations:
+    get:
+      tags: [Integrations]
+      summary: Get all integrations
+      description: Get all outgoing webhook integrations for a board.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of integrations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Integration'
+    post:
+      tags: [Integrations]
+      summary: Create an integration
+      description: Create a new outgoing webhook integration.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: New integration ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/boards/{boardId}/integrations/{intId}:
+    get:
+      tags: [Integrations]
+      summary: Get an integration
+      description: Get a single integration by ID.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: intId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Integration object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Integration'
+    put:
+      tags: [Integrations]
+      summary: Edit an integration
+      description: Update integration properties.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: intId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                title:
+                  type: string
+                url:
+                  type: string
+                  format: uri
+                token:
+                  type: string
+                activities:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Updated integration ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+    delete:
+      tags: [Integrations]
+      summary: Delete an integration
+      description: Permanently delete an integration.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: intId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deleted integration ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdResponse'
+
+  /api/boards/{boardId}/integrations/{intId}/activities:
+    post:
+      tags: [Integrations]
+      summary: Add subscribed activities
+      description: Add activities to an integration's subscription list.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: intId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activities]
+              properties:
+                activities:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Updated integration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Integration'
+    delete:
+      tags: [Integrations]
+      summary: Delete subscribed activities
+      description: Remove activities from an integration's subscription list.
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: intId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activities]
+              properties:
+                activities:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Updated integration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Integration'
+
+  # ── Export ──────────────────────────────────────────────────────────
+  /api/boards/{boardId}/export:
+    get:
+      tags: [Export]
+      summary: Export a board
+      description: |
+        Export a board as JSON. For public boards no authentication is needed.
+        For private boards pass `authToken` as a query parameter.
+      security: []
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: authToken
+          in: query
+          schema:
+            type: string
+          description: Login token (required for private boards)
+      responses:
+        '200':
+          description: Full board export as JSON
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden — no access
+
+  /api/boards/{boardId}/attachments/{attachmentId}/export:
+    get:
+      tags: [Export]
+      summary: Export an attachment
+      description: |
+        Export a single attachment as JSON. For public boards no authentication
+        is needed. For private boards pass `authToken` as a query parameter.
+      security: []
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: attachmentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: authToken
+          in: query
+          schema:
+            type: string
+          description: Login token (required for private boards)
+      responses:
+        '200':
+          description: Attachment data as JSON
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden — no access
