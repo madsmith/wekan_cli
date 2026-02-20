@@ -22,7 +22,6 @@ from .types import (
     Comment,
     CommentDetails,
     CommentId,
-    LabelId,
     ListDetails,
     ListId,
     ListInfo,
