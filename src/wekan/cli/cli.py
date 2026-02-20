@@ -187,8 +187,8 @@ CHECKLIST_ITEM_FIELDS_HELP = _fields_help(ChecklistItemDetails, "checklist-item 
 def _build_parser_action_get(actions):
     get_parser = actions.add_parser(
         "get",
-        help="Get a single resource by ID",
-        description="Get a single resource by ID.",
+        help="Get a a single resource",
+        description="Get a single resource.",
         epilog="Run 'wekancli get TYPE --help' for type-specific arguments.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -201,36 +201,64 @@ def _build_parser_action_get(actions):
     )
     p.set_defaults(handler=handle_get_user)
 
-    p = types.add_parser("board", help="Get board details")
+    p = types.add_parser(
+        "board",
+        help="Get board details",
+        description="Retrieve full details for a board.",
+    )
     p.add_argument("board_id", metavar="BOARD_ID")
     p.set_defaults(handler=handle_get_board)
 
-    p = types.add_parser("list", help="Get list details")
+    p = types.add_parser(
+        "list",
+        help="Get list details",
+        description="Retrieve full details for a list within a board.",
+    )
     p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("list_id", metavar="LIST_ID")
     p.set_defaults(handler=handle_get_list)
 
-    p = types.add_parser("swimlane", help="Get swimlane details")
+    p = types.add_parser(
+        "swimlane",
+        help="Get swimlane details",
+        description="Retrieve full details for a swimlane within a board.",
+    )
     p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("swimlane_id", metavar="SWIMLANE_ID")
     p.set_defaults(handler=handle_get_swimlane)
 
-    p = types.add_parser("card", help="Get card details")
+    p = types.add_parser(
+        "card",
+        help="Get card details",
+        description="Retrieve full details for a card by its ID.",
+    )
     p.add_argument("card_id", metavar="CARD_ID")
     p.set_defaults(handler=handle_get_card)
 
-    p = types.add_parser("checklist", help="Get checklist details")
+    p = types.add_parser(
+        "checklist",
+        help="Get checklist details",
+        description="Retrieve a checklist and its items from a card.",
+    )
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("checklist_id", metavar="CHECKLIST_ID")
     p.set_defaults(handler=handle_get_checklist)
 
-    p = types.add_parser("checklist-item", help="Get checklist item details")
+    p = types.add_parser(
+        "checklist-item",
+        help="Get checklist item details",
+        description="Retrieve a single checklist item.",
+    )
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("checklist_id", metavar="CHECKLIST_ID")
     p.add_argument("item_id", metavar="ITEM_ID")
     p.set_defaults(handler=handle_get_checklist_item)
 
-    p = types.add_parser("comment", help="Get comment details")
+    p = types.add_parser(
+        "comment",
+        help="Get comment details",
+        description="Retrieve a single comment from a card.",
+    )
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("comment_id", metavar="COMMENT_ID")
     p.set_defaults(handler=handle_get_comment)
@@ -240,7 +268,7 @@ def _build_parser_action_list(actions):
     list_parser = actions.add_parser(
         "list",
         help="List resources",
-        description="List resources.",
+        description="List resources, returning brief representations..",
         epilog="Run 'wekancli list TYPE --help' for type-specific arguments.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -249,21 +277,34 @@ def _build_parser_action_list(actions):
     p = types.add_parser(
         "boards",
         help="List boards",
+        description="List boards for a user, or all boards if no user specified.",
         epilog="Listing all boards without USER_ID requires Admin privileges.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument("user_id", metavar="USER_ID", nargs="?", help="Filter by user ID")
     p.set_defaults(handler=handle_list_boards)
 
-    p = types.add_parser("lists", help="List lists in a board")
+    p = types.add_parser(
+        "lists",
+        help="List lists in a board",
+        description="List all lists belonging to a board.",
+    )
     p.add_argument("board_id", metavar="BOARD_ID")
     p.set_defaults(handler=handle_list_lists)
 
-    p = types.add_parser("swimlanes", help="List swimlanes in a board")
+    p = types.add_parser(
+        "swimlanes",
+        help="List swimlanes in a board",
+        description="List all swimlanes belonging to a board.",
+    )
     p.add_argument("board_id", metavar="BOARD_ID")
     p.set_defaults(handler=handle_list_swimlanes)
 
-    p = types.add_parser("cards", help="List cards in a list or swimlane")
+    p = types.add_parser(
+        "cards",
+        help="List cards in a list or swimlane",
+        description="List cards filtered by list or swimlane.",
+    )
     p.add_argument("board_id", metavar="BOARD_ID")
     source = p.add_mutually_exclusive_group(required=True)
     source.add_argument("--list-id", metavar="LIST_ID", help="List cards in a list")
@@ -275,16 +316,25 @@ def _build_parser_action_list(actions):
     p = types.add_parser(
         "users",
         help="List all users",
+        description="List all registered users on the server.",
         epilog="This command requires Admin privileges.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.set_defaults(handler=handle_list_users)
 
-    p = types.add_parser("comments", help="List comments on a card")
+    p = types.add_parser(
+        "comments",
+        help="List comments on a card",
+        description="List all comments on a card.",
+    )
     p.add_argument("card_id", metavar="CARD_ID")
     p.set_defaults(handler=handle_list_comments)
 
-    p = types.add_parser("checklists", help="List checklists on a card")
+    p = types.add_parser(
+        "checklists",
+        help="List checklists on a card",
+        description="List all checklists attached to a card.",
+    )
     p.add_argument("card_id", metavar="CARD_ID")
     p.set_defaults(handler=handle_list_checklists)
 
@@ -302,6 +352,7 @@ def _build_parser_action_create(actions):
     p = types.add_parser(
         "board",
         help="Create a board",
+        description="Create a new board with the given title and owner.",
         epilog=BOARD_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -313,6 +364,7 @@ def _build_parser_action_create(actions):
     p = types.add_parser(
         "list",
         help="Create a list in a board",
+        description="Create a new list in the specified board.",
         epilog=LIST_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -323,6 +375,7 @@ def _build_parser_action_create(actions):
     p = types.add_parser(
         "card",
         help="Create a card",
+        description="Create a new card in the specified board and list.",
         epilog=CARD_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -336,6 +389,7 @@ def _build_parser_action_create(actions):
     p = types.add_parser(
         "comment",
         help="Add a comment to a card",
+        description="Add a text comment to a card.",
         epilog=COMMENT_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -347,6 +401,7 @@ def _build_parser_action_create(actions):
     p = types.add_parser(
         "checklist",
         help="Create a checklist on a card",
+        description="Create a new checklist on a card.",
         epilog=CHECKLIST_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -358,6 +413,7 @@ def _build_parser_action_create(actions):
     p = types.add_parser(
         "checklist-item",
         help="Add item to a checklist",
+        description="Add a new item to an existing checklist.",
         epilog=CHECKLIST_ITEM_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -369,6 +425,7 @@ def _build_parser_action_create(actions):
     p = types.add_parser(
         "swimlane",
         help="Create a swimlane in a board",
+        description="Create a new swimlane in the specified board.",
         epilog=SWIMLANE_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -390,6 +447,7 @@ def _build_parser_action_edit(actions):
     p = types.add_parser(
         "card",
         help="Edit a card",
+        description="Update fields on an existing card.",
         epilog=CARD_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -400,6 +458,7 @@ def _build_parser_action_edit(actions):
     p = types.add_parser(
         "checklist-item",
         help="Edit a checklist item",
+        description="Update fields on an existing checklist item.",
         epilog=CHECKLIST_ITEM_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -423,37 +482,60 @@ def _build_parser_action_delete(actions):
     p = types.add_parser(
         "board",
         help="Delete a board",
+        description="Permanently delete a board and all its contents.",
         epilog="This command requires Admin privileges.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument("board_id", metavar="BOARD_ID")
     p.set_defaults(handler=handle_delete_board)
 
-    p = types.add_parser("list", help="Delete a list")
+    p = types.add_parser(
+        "list",
+        help="Delete a list",
+        description="Permanently delete a list from a board.",
+    )
     p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("list_id", metavar="LIST_ID")
     p.set_defaults(handler=handle_delete_list)
 
-    p = types.add_parser("card", help="Delete a card")
+    p = types.add_parser(
+        "card", help="Delete a card", description="Permanently delete a card."
+    )
     p.add_argument("card_id", metavar="CARD_ID")
     p.set_defaults(handler=handle_delete_card)
 
-    p = types.add_parser("swimlane", help="Delete a swimlane")
+    p = types.add_parser(
+        "swimlane",
+        help="Delete a swimlane",
+        description="Permanently delete a swimlane from a board.",
+    )
     p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("swimlane_id", metavar="SWIMLANE_ID")
     p.set_defaults(handler=handle_delete_swimlane)
 
-    p = types.add_parser("comment", help="Delete a comment")
+    p = types.add_parser(
+        "comment",
+        help="Delete a comment",
+        description="Permanently delete a comment from a card.",
+    )
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("comment_id", metavar="COMMENT_ID")
     p.set_defaults(handler=handle_delete_comment)
 
-    p = types.add_parser("checklist", help="Delete a checklist")
+    p = types.add_parser(
+        "checklist",
+        help="Delete a checklist",
+        description="Permanently delete a checklist and its items from a card.",
+    )
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("checklist_id", metavar="CHECKLIST_ID")
     p.set_defaults(handler=handle_delete_checklist)
 
-    p = types.add_parser("checklist-item", help="Delete a checklist item")
+    p = types.add_parser(
+        "checklist-item",
+        help="Delete a checklist item",
+        description="Permanently delete a single checklist item.",
+    )
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("checklist_id", metavar="CHECKLIST_ID")
     p.add_argument("item_id", metavar="ITEM_ID")
