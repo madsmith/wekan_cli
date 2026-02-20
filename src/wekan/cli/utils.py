@@ -21,7 +21,7 @@ def format_output(data, format_type: str = "json", indent_level: int = 0):
 
     Args:
         data: Data to format
-        format_type: Output format (json, pretty, simple)
+        format_type: Output format (json, json-pretty, text)
         indent_level: Current indentation level for nested structures
 
     Returns:
@@ -29,14 +29,16 @@ def format_output(data, format_type: str = "json", indent_level: int = 0):
     """
     data = _to_serializable(data)
     if format_type == "json":
+        return json.dumps(data)
+    elif format_type == "json-pretty":
         return json.dumps(data, indent=2)
-    elif format_type == "pretty":
+    elif format_type == "text":
         indent = "  " * indent_level
         if isinstance(data, list):
             result = []
             for item in data:
                 if isinstance(item, (dict, list)):
-                    nested = format_output(item, "pretty", indent_level + 1)
+                    nested = format_output(item, "text", indent_level + 1)
                     result.append(f"{indent}- {nested.lstrip()}")
                 else:
                     result.append(f"{indent}- {item}")
@@ -46,7 +48,7 @@ def format_output(data, format_type: str = "json", indent_level: int = 0):
             for k, v in data.items():
                 if isinstance(v, (dict, list)):
                     result.append(f"{indent}{k}:")
-                    nested = format_output(v, "pretty", indent_level + 1)
+                    nested = format_output(v, "text", indent_level + 1)
                     result.append(nested)
                 else:
                     result.append(f"{indent}{k}: {v}")
