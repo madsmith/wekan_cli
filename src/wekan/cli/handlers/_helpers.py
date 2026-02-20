@@ -47,6 +47,14 @@ def not_found(label):
     error_exit(f"{label} not found")
 
 
+def resolve_card(client, card_id):
+    """Fetch a card by ID or exit with not-found."""
+    card = client.get_card_by_id(card_id)
+    if not card:
+        not_found(f"Card {card_id}")
+    return card
+
+
 def not_implemented(label):
     """Print not-implemented message and exit."""
     error_exit(f"Not implemented: {label}")

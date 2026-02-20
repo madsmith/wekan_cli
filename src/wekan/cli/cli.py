@@ -374,8 +374,6 @@ def _build_parser_action_edit(actions):
         epilog=CARD_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    p.add_argument("board_id", metavar="BOARD_ID")
-    p.add_argument("list_id", metavar="LIST_ID")
     p.add_argument("card_id", metavar="CARD_ID")
     add_data_field_options(p)
     p.set_defaults(handler=handle_edit_card)
@@ -386,7 +384,6 @@ def _build_parser_action_edit(actions):
         epilog=CHECKLIST_ITEM_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("checklist_id", metavar="CHECKLIST_ID")
     p.add_argument("item_id", metavar="ITEM_ID")
