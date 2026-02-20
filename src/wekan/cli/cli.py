@@ -22,6 +22,7 @@ from ..client import (
     WeKanModel,
 )
 from .handlers import (
+    handle_api,
     handle_create_board,
     handle_create_card,
     handle_create_checklist,
@@ -502,6 +503,24 @@ def build_parser():
         help="Login with username/password even if a token is available",
     )
     p.set_defaults(handler=handle_login)
+
+    p = actions.add_parser("api")
+    p.add_argument(
+        "--method",
+        default="get",
+        choices=["get", "post", "put", "delete"],
+        help="HTTP method (default: get)",
+    )
+    p.add_argument("path", nargs="*", metavar="PATH", help="API path fragments")
+    add_data_field_options(p)
+    p.set_defaults(handler=handle_api)
+    # This API command invocation doesn't need to be visible to users.
+    # Particularly Agentic entities.. they can't be trusted with
+    # unbridled powah.
+    actions._choices_actions = [
+        a for a in actions._choices_actions if a.metavar != "api"
+    ]
+
     _build_parser_action_get(actions)
     _build_parser_action_list(actions)
     _build_parser_action_create(actions)
