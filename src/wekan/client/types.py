@@ -77,218 +77,357 @@ class APIError(WeKanModel):
 
 
 class User(WeKanModel):
-    userId: UserID = Field(validation_alias="_id")
-    username: str
+    userId: UserID = Field(validation_alias="_id", description="User ID")
+    username: str = Field(description="Username")
 
 
 class LoginResponse(WeKanModel):
-    userId: UserID = Field(validation_alias="id")
-    token: str
-    tokenExpires: str
+    userId: UserID = Field(validation_alias="id", description="User ID")
+    token: str = Field(description="Authentication token")
+    tokenExpires: str = Field(description="Token expiration date")
+
+
+# ---------------------------------------------------------------------------
+# Board types
+# ---------------------------------------------------------------------------
 
 
 class BoardLabel(WeKanModel):
-    labelId: str = Field(validation_alias="_id")
-    name: str
-    color: str
+    labelId: str = Field(validation_alias="_id", description="Label ID")
+    name: str = Field(description="Label name")
+    color: str = Field(description="Label color")
 
 
 class BoardTeam(WeKanModel):
-    teamId: str
-    teamDisplayName: str
-    isActive: bool | None = None
+    teamId: str = Field(description="Team ID")
+    teamDisplayName: str = Field(description="Team display name")
+    isActive: bool | None = Field(
+        default=None, description="Whether the team is active"
+    )
 
 
 class BoardOrg(WeKanModel):
-    orgId: str
-    orgDisplayName: str
-    isActive: bool | None = None
+    model_config = ConfigDict(title="Board Organization")
+    orgId: str = Field(description="Organization ID")
+    orgDisplayName: str = Field(description="Organization display name")
+    isActive: bool | None = Field(default=None, description="Whether the org is active")
 
 
 class BoardId(WeKanModel):
-    boardId: str = Field(validation_alias="_id")
+    boardId: str = Field(validation_alias="_id", description="Board ID")
 
 
 class BoardInfo(BoardId):
-    title: str
+    title: str = Field(description="Board title")
 
 
 class BoardMember(WeKanModel):
-    userId: UserID
-    isAdmin: bool | None = None
-    isActive: bool | None = None
-    isNoComments: bool | None = None
-    isCommentOnly: bool | None = None
-    isWorker: bool | None = None
+    userId: UserID = Field(description="User ID")
+    isAdmin: bool | None = Field(
+        default=None, description="Whether the user is an admin"
+    )
+    isActive: bool | None = Field(
+        default=None, description="Whether the user is active"
+    )
+    isNoComments: bool | None = Field(
+        default=None, description="Whether comments are disabled"
+    )
+    isCommentOnly: bool | None = Field(
+        default=None, description="Whether user can only comment"
+    )
+    isWorker: bool | None = Field(default=None, description="Whether user is a worker")
 
 
 class BoardDetails(BoardId):
-    title: str
-    description: str | None = None
-    color: BoardColor | None = None
-    permission: BoardPermission | None = None
-    archived: bool | None = None
-    archivedAt: str | None = None
-    createdAt: str | None = None
-    modifiedAt: str | None = None
-    sort: int | None = None
-    subtasksDefaultBoardId: str | None = None
-    subtasksDefaultListId: str | None = None
-    presentParentTask: str | None = None
-    receivedAt: str | None = None
-    startAt: str | None = None
-    dueAt: str | None = None
-    labels: list[BoardLabel] | None = None
-    members: list[BoardMember] | None = None
-    teams: list[BoardTeam] | None = None
-    orgs: list[BoardOrg] | None = None
+    model_config = ConfigDict(partial_field_def=True)
+    title: str = Field(description="Board title")
+    description: str | None = Field(default=None, description="Board description")
+    color: BoardColor | None = Field(default=None, description="Board theme color")
+    permission: BoardPermission | None = Field(
+        default=None, description="Board permission (public/private)"
+    )
+    archived: bool | None = Field(
+        default=None, description="Whether the board is archived"
+    )
+    archivedAt: str | None = Field(default=None, description="Date board was archived")
+    createdAt: str | None = Field(default=None, description="Date board was created")
+    modifiedAt: str | None = Field(
+        default=None, description="Date board was last modified"
+    )
+    sort: int | None = Field(default=None, description="Sort order")
+    subtasksDefaultBoardId: str | None = Field(
+        default=None, description="Default board ID for subtasks"
+    )
+    subtasksDefaultListId: str | None = Field(
+        default=None, description="Default list ID for subtasks"
+    )
+    presentParentTask: str | None = Field(
+        default=None, description="Parent task display mode"
+    )
+    receivedAt: str | None = Field(default=None, description="Date board was received")
+    startAt: str | None = Field(default=None, description="Start date")
+    dueAt: str | None = Field(default=None, description="Due date")
+    labels: list[BoardLabel] | None = Field(
+        default=None, description="List of board labels"
+    )
+    members: list[BoardMember] | None = Field(
+        default=None, description="List of board members"
+    )
+    teams: list[BoardTeam] | None = Field(
+        default=None, description="List of board teams"
+    )
+    orgs: list[BoardOrg] | None = Field(
+        default=None, description="List of board organizations"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Swimlane types
+# ---------------------------------------------------------------------------
 
 
 class SwimlaneId(WeKanModel):
-    swimlaneId: str = Field(validation_alias="_id")
+    swimlaneId: str = Field(validation_alias="_id", description="Swimlane ID")
 
 
 class SwimlaneInfo(SwimlaneId):
-    title: str
+    title: str = Field(description="Swimlane title")
 
 
 class SwimlaneDetails(SwimlaneId):
-    title: str
-    archived: bool | None = None
-    archivedAt: str | None = None
-    boardId: str | None = None
-    createdAt: str | None = None
-    sort: int | None = None
-    color: Color | None = None
-    updatedAt: str | None = None
-    modifiedAt: str | None = None
-    collapsed: bool | None = None
+    title: str = Field(description="Swimlane title")
+    archived: bool | None = Field(
+        default=None, description="Whether the swimlane is archived"
+    )
+    archivedAt: str | None = Field(
+        default=None, description="Date swimlane was archived"
+    )
+    boardId: str | None = Field(
+        default=None, description="Board ID the swimlane belongs to"
+    )
+    createdAt: str | None = Field(default=None, description="Date swimlane was created")
+    sort: int | None = Field(default=None, description="Sort order")
+    color: Color | None = Field(default=None, description="Swimlane color")
+    updatedAt: str | None = Field(
+        default=None, description="Date swimlane was last updated"
+    )
+    modifiedAt: str | None = Field(
+        default=None, description="Date swimlane was last modified"
+    )
+    collapsed: bool | None = Field(
+        default=None, description="Whether the swimlane is collapsed"
+    )
+
+
+# ---------------------------------------------------------------------------
+# List types
+# ---------------------------------------------------------------------------
 
 
 class ListId(WeKanModel):
-    listId: str = Field(validation_alias="_id")
+    listId: str = Field(validation_alias="_id", description="List ID")
 
 
 class ListInfo(ListId):
-    title: str
+    title: str = Field(description="List title")
 
 
 class WIPLimit(WeKanModel):
-    value: int | None = None
-    enabled: bool | None = None
-    soft: bool | None = None
+    model_config = ConfigDict(title="Work In Progress Limit")
+    value: int | None = Field(default=None, description="WIP limit value")
+    enabled: bool | None = Field(
+        default=None, description="Whether WIP limit is enabled"
+    )
+    soft: bool | None = Field(
+        default=None, description="Whether the limit is a soft limit"
+    )
 
 
 class ListDetails(ListId):
-    title: str
-    starred: bool | None = None
-    archived: bool | None = None
-    archivedAt: str | None = None
-    boardId: str | None = None
-    swimlaneId: str | None = None
-    sort: int | None = None
-    color: Color | None = None
-    createdAt: str | None = None
-    updatedAt: str | None = None
-    modifiedAt: str | None = None
-    wipLimit: WIPLimit | None = None
-    collapsed: bool | None = None
+    title: str = Field(description="List title")
+    starred: bool | None = Field(
+        default=None, description="Whether the list is starred"
+    )
+    archived: bool | None = Field(
+        default=None, description="Whether the list is archived"
+    )
+    archivedAt: str | None = Field(default=None, description="Date list was archived")
+    boardId: str | None = Field(
+        default=None, description="Board ID the list belongs to"
+    )
+    swimlaneId: str | None = Field(
+        default=None, description="Swimlane ID the list belongs to"
+    )
+    sort: int | None = Field(default=None, description="Sort order")
+    color: Color | None = Field(default=None, description="List color")
+    createdAt: str | None = Field(default=None, description="Date list was created")
+    updatedAt: str | None = Field(
+        default=None, description="Date list was last updated"
+    )
+    modifiedAt: str | None = Field(
+        default=None, description="Date list was last modified"
+    )
+    wipLimit: WIPLimit | None = Field(
+        default=None, description="Work-in-progress limit"
+    )
+    collapsed: bool | None = Field(
+        default=None, description="Whether the list is collapsed"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Card types
+# ---------------------------------------------------------------------------
 
 
 class CardId(WeKanModel):
-    cardId: str = Field(validation_alias="_id")
+    cardId: str = Field(validation_alias="_id", description="Card ID")
 
 
 class CardInfo(CardId):
-    title: str
-    description: str | None = None
+    title: str = Field(description="Card title")
+    description: str | None = Field(default=None, description="Card description")
 
 
 class Vote(WeKanModel):
-    question: str | None = None
-    positive: list[UserID] | None = None
-    negative: list[UserID] | None = None
-    end: str | None = None
-    public: bool | None = None
-    allowNonBoardMembers: bool | None = None
+    question: str | None = Field(default=None, description="Vote question text")
+    positive: list[UserID] | None = Field(
+        default=None, description="User IDs who voted in favor"
+    )
+    negative: list[UserID] | None = Field(
+        default=None, description="User IDs who voted against"
+    )
+    end: str | None = Field(default=None, description="Vote end date")
+    public: bool | None = Field(default=None, description="Whether the vote is public")
+    allowNonBoardMembers: bool | None = Field(
+        default=None, description="Allow non-board members to vote"
+    )
 
 
 class CardDetails(CardId):
-    title: str
-    description: str | None = None
-    color: Color | None = None
-    archived: bool | None = None
-    archivedAt: str | None = None
-    listId: str | None = None
-    swimlaneId: str | None = None
-    boardId: str | None = None
-    createdAt: str | None = None
-    modifiedAt: str | None = None
-    assignedBy: UserID | None = None
-    requestedBy: UserID | None = None
-    labelIds: list[str] | None = None
-    members: list[UserID] | None = None
-    assignees: list[UserID] | None = None
-    receivedAt: str | None = None
-    dueAt: str | None = None
-    endsAt: str | None = None
-    cardNumber: int | None = None
-    sort: int | None = None
-    customFields: list[dict] | None = None
-    dateLastActivity: str | None = None
-    startAt: str | None = None
-    vote: Vote | None = None
+    model_config = ConfigDict(partial_field_def=True)
+    title: str = Field(description="Card title")
+    description: str | None = Field(
+        default=None, description="Card description (markdown)"
+    )
+    color: Color | None = Field(default=None, description="Card color")
+    archived: bool | None = Field(
+        default=None, description="Whether the card is archived"
+    )
+    archivedAt: str | None = Field(default=None, description="Date card was archived")
+    listId: str | None = Field(default=None, description="List ID the card belongs to")
+    swimlaneId: str | None = Field(
+        default=None, description="Swimlane ID the card belongs to"
+    )
+    boardId: str | None = Field(
+        default=None, description="Board ID the card belongs to"
+    )
+    createdAt: str | None = Field(default=None, description="Date card was created")
+    modifiedAt: str | None = Field(
+        default=None, description="Date card was last modified"
+    )
+    assignedBy: UserID | None = Field(
+        default=None, description="User ID who assigned the card"
+    )
+    requestedBy: UserID | None = Field(
+        default=None, description="User ID who requested the card"
+    )
+    labelIds: list[str] | None = Field(default=None, description="List of label IDs")
+    members: list[UserID] | None = Field(
+        default=None, description="List of member user IDs"
+    )
+    assignees: list[UserID] | None = Field(
+        default=None, description="List of assignee user IDs"
+    )
+    receivedAt: str | None = Field(default=None, description="Date card was received")
+    dueAt: str | None = Field(default=None, description="Due date")
+    endsAt: str | None = Field(default=None, description="End date")
+    cardNumber: int | None = Field(default=None, description="Card number (read-only)")
+    sort: int | None = Field(default=None, description="Sort order")
+    customFields: list[dict] | None = Field(
+        default=None, description="Custom field values"
+    )
+    dateLastActivity: str | None = Field(
+        default=None, description="Date of last activity (read-only)"
+    )
+    startAt: str | None = Field(default=None, description="Start date")
+    vote: Vote | None = Field(default=None, description="Vote object")
+
+
+# ---------------------------------------------------------------------------
+# Comment types
+# ---------------------------------------------------------------------------
 
 
 class CommentId(WeKanModel):
-    commentId: str = Field(validation_alias="_id")
+    commentId: str = Field(validation_alias="_id", description="Comment ID")
 
 
 class Comment(CommentId):
-    comment: str
-    authorId: UserID
+    comment: str = Field(description="Comment text")
+    authorId: UserID = Field(description="Author user ID")
 
 
 class CommentDetails(CommentId):
-    boardId: str | None = None
-    cardId: str | None = None
-    text: str | None = None
-    createdAt: str | None = None
-    modifiedAt: str | None = None
-    userId: UserID | None = None
+    boardId: str | None = Field(default=None, description="Board ID")
+    cardId: str | None = Field(default=None, description="Card ID")
+    text: str | None = Field(default=None, description="Comment text")
+    createdAt: str | None = Field(default=None, description="Date comment was created")
+    modifiedAt: str | None = Field(
+        default=None, description="Date comment was last modified"
+    )
+    userId: UserID | None = Field(default=None, description="Author user ID")
+
+
+# ---------------------------------------------------------------------------
+# Checklist types
+# ---------------------------------------------------------------------------
 
 
 class ChecklistId(WeKanModel):
-    checklistId: str = Field(validation_alias="_id")
+    checklistId: str = Field(validation_alias="_id", description="Checklist ID")
 
 
 class Checklist(ChecklistId):
-    title: str
+    title: str = Field(description="Checklist title")
 
 
 class ChecklistItemId(WeKanModel):
-    checklistItemId: str = Field(validation_alias="_id")
+    checklistItemId: str = Field(
+        validation_alias="_id", description="Checklist item ID"
+    )
 
 
 class ChecklistItem(ChecklistItemId):
-    title: str
-    isFinished: bool
+    title: str = Field(description="Item title")
+    isFinished: bool = Field(description="Whether the item is finished")
 
 
 class ChecklistDetails(ChecklistId):
-    cardId: str | None = None
-    title: str
-    finishedAt: str | None = None
-    createdAt: str | None = None
-    sort: int | None = None
-    items: list[ChecklistItem] | None = None
+    model_config = ConfigDict(partial_field_def=True)
+    cardId: str | None = Field(default=None, description="Card ID")
+    title: str = Field(description="Checklist title")
+    finishedAt: str | None = Field(
+        default=None, description="Date checklist was completed"
+    )
+    createdAt: str | None = Field(
+        default=None, description="Date checklist was created"
+    )
+    sort: int | None = Field(default=None, description="Sort order")
+    items: list[ChecklistItem] | None = Field(
+        default=None, description="List of checklist items"
+    )
 
 
 class ChecklistItemDetails(ChecklistItemId):
-    title: str
-    sort: int | None = None
-    isFinished: bool | None = None
-    checklistId: str | None = None
-    cardId: str | None = None
-    createdAt: str | None = None
-    modifiedAt: str | None = None
+    title: str = Field(description="Item title")
+    sort: int | None = Field(default=None, description="Sort order")
+    isFinished: bool | None = Field(
+        default=None, description="Whether the item is finished"
+    )
+    checklistId: str | None = Field(default=None, description="Checklist ID")
+    cardId: str | None = Field(default=None, description="Card ID")
+    createdAt: str | None = Field(default=None, description="Date item was created")
+    modifiedAt: str | None = Field(
+        default=None, description="Date item was last modified"
+    )

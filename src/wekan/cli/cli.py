@@ -9,7 +9,18 @@ import sys
 from pydantic import ValidationError
 
 from .. import __version__
-from ..client import WeKanAPIError, WeKanClient
+from ..client import (
+    BoardDetails,
+    CardDetails,
+    ChecklistDetails,
+    ChecklistItemDetails,
+    CommentDetails,
+    ListDetails,
+    SwimlaneDetails,
+    WeKanAPIError,
+    WeKanClient,
+    WeKanModel,
+)
 from .handlers import (
     handle_create_board,
     handle_create_card,
@@ -107,16 +118,62 @@ def add_data_field_options(parser):
 # Help text constants
 # ---------------------------------------------------------------------------
 
-CARD_FIELDS_HELP = """\
-known card fields:
-  title, description, color, labelIds, members, assignees,
-  requestedBy, assignedBy, dueAt, startAt, endAt, receivedAt,
-  spentTime, isOverTime, sort, parentId, authorId,
-  newBoardId, newListId, newSwimlaneId, archive"""
 
-CHECKLIST_ITEM_FIELDS_HELP = """\
-known checklist-item fields:
-  title, isFinished"""
+def _fields_help(model, label):
+    """Generate a help string listing fields and descriptions from a Pydantic model."""
+    import types as _types
+    import typing
+
+    lines = [f"{label}:"]
+
+    col = 28  # column where descriptions start
+
+    def _type_label(cls):
+        """Return config title or convert 'BoardMember' to 'Board Member'."""
+        title = cls.model_config.get("title")
+        if title:
+            return title
+        import re
+
+        return re.sub(r"(?<=[a-z])(?=[A-Z])", " ", cls.__name__)
+
+    def _collect(mdl, depth=0):
+        indent = "  " * (depth + 1)
+        for name, info in mdl.model_fields.items():
+            desc = info.description or ""
+            field = f"{indent}{name}"
+            padding = max(1, col - len(field))
+            lines.append(f"{field}{' ' * padding}{desc}")
+            # Unwrap Optional (X | None) and list[X] to check for nested WeKanModel
+            ann = info.annotation
+            if isinstance(ann, _types.UnionType):
+                args = [a for a in typing.get_args(ann) if a is not type(None)]
+                if len(args) == 1:
+                    ann = args[0]
+            origin = typing.get_origin(ann)
+            if origin is list:
+                list_args = typing.get_args(ann)
+                if list_args:
+                    ann = list_args[0]
+            if isinstance(ann, type) and issubclass(ann, WeKanModel):
+                child_indent = "  " * (depth + 2)
+                lines.append(f"{child_indent}{_type_label(ann)} fields:")
+                _collect(ann, depth + 2)
+
+    _collect(model)
+    if model.model_config.get("partial_field_def"):
+        lines.append("")
+        lines.append("Partial field list, consult API docs for full object schema")
+    return "\n".join(lines)
+
+
+BOARD_FIELDS_HELP = _fields_help(BoardDetails, "board fields")
+LIST_FIELDS_HELP = _fields_help(ListDetails, "list fields")
+SWIMLANE_FIELDS_HELP = _fields_help(SwimlaneDetails, "swimlane fields")
+CARD_FIELDS_HELP = _fields_help(CardDetails, "card fields")
+COMMENT_FIELDS_HELP = _fields_help(CommentDetails, "comment fields")
+CHECKLIST_FIELDS_HELP = _fields_help(ChecklistDetails, "checklist fields")
+CHECKLIST_ITEM_FIELDS_HELP = _fields_help(ChecklistItemDetails, "checklist-item fields")
 
 
 # ---------------------------------------------------------------------------
@@ -222,13 +279,23 @@ def _build_parser_action_create(actions):
     )
     types = create_parser.add_subparsers(dest="type", title="types", metavar="TYPE")
 
-    p = types.add_parser("board", help="Create a board")
+    p = types.add_parser(
+        "board",
+        help="Create a board",
+        epilog=BOARD_FIELDS_HELP,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     p.add_argument("title", metavar="TITLE")
     p.add_argument("owner_id", metavar="OWNER_ID")
     add_data_field_options(p)
     p.set_defaults(handler=handle_create_board)
 
-    p = types.add_parser("list", help="Create a list in a board")
+    p = types.add_parser(
+        "list",
+        help="Create a list in a board",
+        epilog=LIST_FIELDS_HELP,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("title", metavar="TITLE")
     p.set_defaults(handler=handle_create_list)
@@ -236,7 +303,7 @@ def _build_parser_action_create(actions):
     p = types.add_parser(
         "card",
         help="Create a card",
-        epilog="Use -f to set optional fields: description, color, labelIds, members, etc.",
+        epilog=CARD_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument("board_id", metavar="BOARD_ID")
@@ -246,25 +313,45 @@ def _build_parser_action_create(actions):
     add_data_field_options(p)
     p.set_defaults(handler=handle_create_card)
 
-    p = types.add_parser("comment", help="Add a comment to a card")
+    p = types.add_parser(
+        "comment",
+        help="Add a comment to a card",
+        epilog=COMMENT_FIELDS_HELP,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("author_id", metavar="AUTHOR_ID")
     p.add_argument("comment", metavar="COMMENT")
     p.set_defaults(handler=handle_create_comment)
 
-    p = types.add_parser("checklist", help="Create a checklist on a card")
+    p = types.add_parser(
+        "checklist",
+        help="Create a checklist on a card",
+        epilog=CHECKLIST_FIELDS_HELP,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("title", metavar="TITLE")
     add_data_field_options(p)
     p.set_defaults(handler=handle_create_checklist)
 
-    p = types.add_parser("checklist-item", help="Add item to a checklist")
+    p = types.add_parser(
+        "checklist-item",
+        help="Add item to a checklist",
+        epilog=CHECKLIST_ITEM_FIELDS_HELP,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     p.add_argument("card_id", metavar="CARD_ID")
     p.add_argument("checklist_id", metavar="CHECKLIST_ID")
     p.add_argument("title", metavar="TITLE")
     p.set_defaults(handler=handle_create_checklist_item)
 
-    p = types.add_parser("swimlane", help="Create a swimlane in a board")
+    p = types.add_parser(
+        "swimlane",
+        help="Create a swimlane in a board",
+        epilog=SWIMLANE_FIELDS_HELP,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("title", metavar="TITLE")
     p.set_defaults(handler=handle_create_swimlane)
