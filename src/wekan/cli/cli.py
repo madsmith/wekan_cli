@@ -601,12 +601,6 @@ def build_parser():
         default=argparse.SUPPRESS,
         help="Password (env: WEKAN_PASSWORD)",
     )
-    p.add_argument(
-        "--force",
-        action="store_true",
-        default=False,
-        help="Login with username/password even if a token is available",
-    )
     p.set_defaults(handler=handle_login)
 
     p = actions.add_parser("api")

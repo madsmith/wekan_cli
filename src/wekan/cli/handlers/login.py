@@ -19,7 +19,6 @@ def handle_login(args):
             print(f"  User ID: {client.user_id}")
 
     url = resolve_env(getattr(args, "url", None), "URL")
-    token = resolve_env(getattr(args, "token", None), "TOKEN")
 
     if not url:
         print(
@@ -28,9 +27,12 @@ def handle_login(args):
         )
         sys.exit(1)
 
-    force = getattr(args, "force", False)
+    username = resolve_env(getattr(args, "username", None), "USERNAME")
+    password = resolve_env(getattr(args, "password", None), "PASSWORD")
+    token = resolve_env(getattr(args, "token", None), "TOKEN")
 
-    if token and not force:
+    # Try existing token if no credentials provided
+    if token and not (username or password):
         client = WeKanClient(url, token=token)
         try:
             user = client.get_user()
@@ -40,9 +42,7 @@ def handle_login(args):
         except Exception:
             print("Invalid session token", file=sys.stderr)
 
-    username = resolve_env(getattr(args, "username", None), "USERNAME")
-    password = resolve_env(getattr(args, "password", None), "PASSWORD")
-
+    # Prompt for missing credentials
     if not username:
         username = input("Username: ")
     if not password:
