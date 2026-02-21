@@ -282,15 +282,6 @@ def _build_parser_action_get(actions: argparse._SubParsersAction) -> None:
     p.set_defaults(handler=handle_get_board)
 
     p = types.add_parser(
-        "list",
-        help="Get list details",
-        description="Retrieve full details for a list within a board.",
-    )
-    p.add_argument("board_id", metavar="BOARD_ID")
-    p.add_argument("list_id", metavar="LIST_ID")
-    p.set_defaults(handler=handle_get_list)
-
-    p = types.add_parser(
         "swimlane",
         help="Get swimlane details",
         description="Retrieve full details for a swimlane within a board.",
@@ -300,12 +291,30 @@ def _build_parser_action_get(actions: argparse._SubParsersAction) -> None:
     p.set_defaults(handler=handle_get_swimlane)
 
     p = types.add_parser(
+        "list",
+        help="Get list details",
+        description="Retrieve full details for a list within a board.",
+    )
+    p.add_argument("board_id", metavar="BOARD_ID")
+    p.add_argument("list_id", metavar="LIST_ID")
+    p.set_defaults(handler=handle_get_list)
+
+    p = types.add_parser(
         "card",
         help="Get card details",
         description="Retrieve full details for a card by its ID.",
     )
     p.add_argument("card_id", metavar="CARD_ID")
     p.set_defaults(handler=handle_get_card)
+
+    p = types.add_parser(
+        "comment",
+        help="Get comment details",
+        description="Retrieve a single comment from a card.",
+    )
+    p.add_argument("card_id", metavar="CARD_ID")
+    p.add_argument("comment_id", metavar="COMMENT_ID")
+    p.set_defaults(handler=handle_get_comment)
 
     p = types.add_parser(
         "checklist",
@@ -326,15 +335,6 @@ def _build_parser_action_get(actions: argparse._SubParsersAction) -> None:
     p.add_argument("item_id", metavar="ITEM_ID")
     p.set_defaults(handler=handle_get_checklist_item)
 
-    p = types.add_parser(
-        "comment",
-        help="Get comment details",
-        description="Retrieve a single comment from a card.",
-    )
-    p.add_argument("card_id", metavar="CARD_ID")
-    p.add_argument("comment_id", metavar="COMMENT_ID")
-    p.set_defaults(handler=handle_get_comment)
-
 
 def _build_parser_action_list(actions: argparse._SubParsersAction) -> None:
     list_parser = actions.add_parser(
@@ -345,6 +345,15 @@ def _build_parser_action_list(actions: argparse._SubParsersAction) -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     types = list_parser.add_subparsers(dest="type", title="types", metavar="TYPE")
+
+    p = types.add_parser(
+        "users",
+        help="List all users",
+        description="List all registered users on the server.",
+        epilog="This command requires Admin privileges.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p.set_defaults(handler=handle_list_users)
 
     p = types.add_parser(
         "boards",
@@ -365,20 +374,20 @@ def _build_parser_action_list(actions: argparse._SubParsersAction) -> None:
     p.set_defaults(handler=handle_list_labels)
 
     p = types.add_parser(
-        "lists",
-        help="List lists in a board",
-        description="List all lists belonging to a board.",
-    )
-    p.add_argument("board_id", metavar="BOARD_ID")
-    p.set_defaults(handler=handle_list_lists)
-
-    p = types.add_parser(
         "swimlanes",
         help="List swimlanes in a board",
         description="List all swimlanes belonging to a board.",
     )
     p.add_argument("board_id", metavar="BOARD_ID")
     p.set_defaults(handler=handle_list_swimlanes)
+
+    p = types.add_parser(
+        "lists",
+        help="List lists in a board",
+        description="List all lists belonging to a board.",
+    )
+    p.add_argument("board_id", metavar="BOARD_ID")
+    p.set_defaults(handler=handle_list_lists)
 
     p = types.add_parser(
         "cards",
@@ -392,15 +401,6 @@ def _build_parser_action_list(actions: argparse._SubParsersAction) -> None:
         "--swimlane-id", metavar="SWIMLANE_ID", help="List cards in a swimlane"
     )
     p.set_defaults(handler=handle_list_cards)
-
-    p = types.add_parser(
-        "users",
-        help="List all users",
-        description="List all registered users on the server.",
-        epilog="This command requires Admin privileges.",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    p.set_defaults(handler=handle_list_users)
 
     p = types.add_parser(
         "comments",
@@ -452,6 +452,17 @@ def _build_parser_action_create(actions: argparse._SubParsersAction) -> None:
     p.add_argument("name", metavar="NAME")
     p.add_argument("color", metavar="COLOR", choices=[c.value for c in Color])
     p.set_defaults(handler=handle_create_label)
+
+    p = types.add_parser(
+        "swimlane",
+        help="Create a swimlane in a board",
+        description="Create a new swimlane in the specified board.",
+        epilog=SWIMLANE_FIELDS_HELP,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p.add_argument("board_id", metavar="BOARD_ID")
+    p.add_argument("title", metavar="TITLE")
+    p.set_defaults(handler=handle_create_swimlane)
 
     p = types.add_parser(
         "list",
@@ -520,17 +531,6 @@ def _build_parser_action_create(actions: argparse._SubParsersAction) -> None:
     p.add_argument("title", metavar="TITLE")
     p.set_defaults(handler=handle_create_checklist_item)
 
-    p = types.add_parser(
-        "swimlane",
-        help="Create a swimlane in a board",
-        description="Create a new swimlane in the specified board.",
-        epilog=SWIMLANE_FIELDS_HELP,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    p.add_argument("board_id", metavar="BOARD_ID")
-    p.add_argument("title", metavar="TITLE")
-    p.set_defaults(handler=handle_create_swimlane)
-
 
 def _build_parser_action_edit(actions: argparse._SubParsersAction) -> None:
     edit_parser = actions.add_parser(
@@ -594,6 +594,15 @@ def _build_parser_action_delete(actions: argparse._SubParsersAction) -> None:
     p.set_defaults(handler=handle_delete_board)
 
     p = types.add_parser(
+        "swimlane",
+        help="Delete a swimlane",
+        description="Permanently delete a swimlane from a board.",
+    )
+    p.add_argument("board_id", metavar="BOARD_ID")
+    p.add_argument("swimlane_id", metavar="SWIMLANE_ID")
+    p.set_defaults(handler=handle_delete_swimlane)
+
+    p = types.add_parser(
         "list",
         help="Delete a list",
         description="Permanently delete a list from a board.",
@@ -607,15 +616,6 @@ def _build_parser_action_delete(actions: argparse._SubParsersAction) -> None:
     )
     p.add_argument("card_id", metavar="CARD_ID")
     p.set_defaults(handler=handle_delete_card)
-
-    p = types.add_parser(
-        "swimlane",
-        help="Delete a swimlane",
-        description="Permanently delete a swimlane from a board.",
-    )
-    p.add_argument("board_id", metavar="BOARD_ID")
-    p.add_argument("swimlane_id", metavar="SWIMLANE_ID")
-    p.set_defaults(handler=handle_delete_swimlane)
 
     p = types.add_parser(
         "comment",
