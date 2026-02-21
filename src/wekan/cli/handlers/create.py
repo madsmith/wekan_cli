@@ -4,7 +4,7 @@ Handlers for the 'create' action.
 
 import argparse
 
-from wekan.client import WeKanClient
+from wekan.client import BoardDetails, CardDetails, ChecklistDetails, WeKanClient
 
 from ._helpers import error_exit, merge_fields_with_stdin, not_found, output
 
@@ -17,7 +17,7 @@ def handle_create_label(client: WeKanClient, args: argparse.Namespace) -> None:
 
 
 def handle_create_board(client: WeKanClient, args: argparse.Namespace) -> None:
-    fields = merge_fields_with_stdin(args)
+    fields = merge_fields_with_stdin(args, BoardDetails)
     board = client.create_board(args.title, args.owner_id, **fields)
     output(board, args.format)
 
@@ -28,7 +28,7 @@ def handle_create_list(client: WeKanClient, args: argparse.Namespace) -> None:
 
 
 def handle_create_card(client: WeKanClient, args: argparse.Namespace) -> None:
-    fields = merge_fields_with_stdin(args)
+    fields = merge_fields_with_stdin(args, CardDetails)
     description = fields.pop("description", None)
     lst = client.get_list(args.board_id, args.list_id)
     if lst is None:
@@ -59,7 +59,7 @@ def handle_create_checklist(client: WeKanClient, args: argparse.Namespace) -> No
     card = client.get_card_by_id(args.card_id)
     if card is None:
         not_found(f"Card {args.card_id}")
-    fields = merge_fields_with_stdin(args)
+    fields = merge_fields_with_stdin(args, ChecklistDetails)
     items = fields.pop("items", None)
     checklist = client.create_checklist(card.boardId, args.card_id, args.title, items)
     output(checklist, args.format)
