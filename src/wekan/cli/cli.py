@@ -5,6 +5,7 @@ WeKan CLI - Command line interface for WeKan REST API
 import argparse
 import os
 import sys
+from typing import Any, Sequence
 
 from pydantic import ValidationError
 
@@ -70,7 +71,13 @@ from .utils import resolve_env
 class KeyValueAction(argparse.Action):
     """Parse repeated -f key=value into a dict."""
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
+    ) -> None:
         if values is None or not isinstance(values, str) or "=" not in values:
             parser.error(f"invalid field format '{values}', expected key=value")
         key, value = values.split("=", 1)
@@ -79,7 +86,7 @@ class KeyValueAction(argparse.Action):
         setattr(namespace, self.dest, fields)
 
 
-def create_client(args):
+def create_client(args: argparse.Namespace) -> WeKanClient:
     """Create and authenticate a WeKanClient from parsed args."""
     url = resolve_env(getattr(args, "url", None), "URL")
     username = resolve_env(getattr(args, "username", None), "USERNAME")
@@ -101,7 +108,7 @@ def create_client(args):
     return client
 
 
-def add_data_field_options(parser):
+def add_data_field_options(parser: argparse.ArgumentParser) -> None:
     """Add -f/--field and --json options to a subparser."""
     parser.add_argument(
         "-f",
@@ -125,7 +132,9 @@ def add_data_field_options(parser):
 # ---------------------------------------------------------------------------
 
 
-def _fields_help(model, label, *, include_advanced=False):
+def _fields_help(
+    model: type[WeKanModel], label: str, *, include_advanced: bool = False
+) -> str:
     """Generate a help string listing fields and descriptions from a Pydantic model."""
     import types as _types
     import typing
@@ -135,7 +144,7 @@ def _fields_help(model, label, *, include_advanced=False):
 
     col = 28  # column where descriptions start
 
-    def _type_label(cls):
+    def _type_label(cls: type[WeKanModel]) -> str:
         """Return config title or convert 'BoardMember' to 'Board Member'."""
         title = cls.model_config.get("title")
         if title:
@@ -144,11 +153,15 @@ def _fields_help(model, label, *, include_advanced=False):
 
         return re.sub(r"(?<=[a-z])(?=[A-Z])", " ", cls.__name__)
 
-    def _collect(mdl, depth=0):
+    def _collect(mdl: type[WeKanModel], depth: int = 0) -> None:
         nonlocal has_advanced
         indent = "  " * (depth + 1)
         for name, info in mdl.model_fields.items():
-            extra = info.json_schema_extra or {}
+            extra = (
+                info.json_schema_extra
+                if isinstance(info.json_schema_extra, dict)
+                else {}
+            )
             editable = extra.get("editable", True)
             advanced = extra.get("advanced", False)
             edit_key = extra.get("edit_key")
@@ -186,7 +199,8 @@ def _fields_help(model, label, *, include_advanced=False):
                 _collect(ann, depth + 2)
 
     _collect(model)
-    schema_extra = model.model_config.get("json_schema_extra") or {}
+    schema_extra = model.model_config.get("json_schema_extra")
+    schema_extra = schema_extra if isinstance(schema_extra, dict) else {}
     if schema_extra.get("partial_field_def"):
         lines.append("")
         lines.append("Partial field list, consult API docs for full object schema")
@@ -221,22 +235,28 @@ class _HelpAllAction(argparse.Action):
 
     def __init__(
         self,
-        option_strings,
-        dest=argparse.SUPPRESS,
-        default=argparse.SUPPRESS,
-        **kwargs,
-    ):
+        option_strings: list[str],
+        dest: str = argparse.SUPPRESS,
+        default: str = argparse.SUPPRESS,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(
             option_strings=option_strings, dest=dest, default=default, nargs=0, **kwargs
         )
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
+    ) -> None:
         parser.epilog = getattr(parser, "_help_all_epilog", None)
         parser.print_help()
         parser.exit()
 
 
-def _build_parser_action_get(actions):
+def _build_parser_action_get(actions: argparse._SubParsersAction) -> None:
     get_parser = actions.add_parser(
         "get",
         help="Get a a single resource",
@@ -316,7 +336,7 @@ def _build_parser_action_get(actions):
     p.set_defaults(handler=handle_get_comment)
 
 
-def _build_parser_action_list(actions):
+def _build_parser_action_list(actions: argparse._SubParsersAction) -> None:
     list_parser = actions.add_parser(
         "list",
         help="List resources",
@@ -399,7 +419,7 @@ def _build_parser_action_list(actions):
     p.set_defaults(handler=handle_list_checklists)
 
 
-def _build_parser_action_create(actions):
+def _build_parser_action_create(actions: argparse._SubParsersAction) -> None:
     create_parser = actions.add_parser(
         "create",
         help="Create a new resource",
@@ -512,7 +532,7 @@ def _build_parser_action_create(actions):
     p.set_defaults(handler=handle_create_swimlane)
 
 
-def _build_parser_action_edit(actions):
+def _build_parser_action_edit(actions: argparse._SubParsersAction) -> None:
     edit_parser = actions.add_parser(
         "edit",
         help="Edit an existing resource",
@@ -553,7 +573,7 @@ def _build_parser_action_edit(actions):
     p.set_defaults(handler=handle_edit_checklist_item)
 
 
-def _build_parser_action_delete(actions):
+def _build_parser_action_delete(actions: argparse._SubParsersAction) -> None:
     delete_parser = actions.add_parser(
         "delete",
         help="Delete a resource",
@@ -626,7 +646,7 @@ def _build_parser_action_delete(actions):
     p.set_defaults(handler=handle_delete_checklist_item)
 
 
-def _build_parser_action_archive(actions):
+def _build_parser_action_archive(actions: argparse._SubParsersAction) -> None:
     archive_parser = actions.add_parser(
         "archive",
         help="Archive a resource",
@@ -651,7 +671,7 @@ def _build_parser_action_archive(actions):
     p.set_defaults(handler=handle_archive_card)
 
 
-def build_parser():
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="wekancli",
         description="WeKan CLI - Kanban board management",
@@ -729,7 +749,7 @@ def build_parser():
 # ---------------------------------------------------------------------------
 
 
-def main():
+def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 

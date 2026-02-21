@@ -2,11 +2,14 @@
 Utility functions for WeKan CLI.
 """
 
+from __future__ import annotations
+
 import json
 import os
+from typing import Any
 
 
-def _to_serializable(data):
+def _to_serializable(data: Any) -> Any:
     """Convert Pydantic models to dicts for output formatting."""
     if isinstance(data, list):
         return [_to_serializable(item) for item in data]
@@ -15,7 +18,7 @@ def _to_serializable(data):
     return data
 
 
-def format_output(data, format_type: str = "json", indent_level: int = 0):
+def format_output(data: Any, format_type: str = "json", indent_level: int = 0) -> str:
     """
     Format output data for display
 
