@@ -2,6 +2,7 @@
 Login handler for WeKan CLI.
 """
 
+import argparse
 import getpass
 import sys
 
@@ -9,7 +10,7 @@ from ...client import WeKanClient
 from ..utils import resolve_env
 
 
-def handle_login(args):
+def handle_login(args: argparse.Namespace) -> None:
     """Authenticate and print the token."""
 
     def display_login_info(client: WeKanClient):

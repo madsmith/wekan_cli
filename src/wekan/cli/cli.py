@@ -24,6 +24,7 @@ from ..client import (
 )
 from .handlers import (
     handle_api,
+    handle_archive_card,
     handle_create_board,
     handle_create_card,
     handle_create_checklist,
@@ -124,12 +125,13 @@ def add_data_field_options(parser):
 # ---------------------------------------------------------------------------
 
 
-def _fields_help(model, label):
+def _fields_help(model, label, *, include_advanced=False):
     """Generate a help string listing fields and descriptions from a Pydantic model."""
     import types as _types
     import typing
 
     lines = [f"{label}:"]
+    has_advanced = False
 
     col = 28  # column where descriptions start
 
@@ -143,12 +145,30 @@ def _fields_help(model, label):
         return re.sub(r"(?<=[a-z])(?=[A-Z])", " ", cls.__name__)
 
     def _collect(mdl, depth=0):
+        nonlocal has_advanced
         indent = "  " * (depth + 1)
         for name, info in mdl.model_fields.items():
+            extra = info.json_schema_extra or {}
+            editable = extra.get("editable", True)
+            advanced = extra.get("advanced", False)
+            edit_key = extra.get("edit_key")
+            is_id = name.endswith("Id") and info.validation_alias == "_id"
+
+            if is_id or not editable:
+                continue
+
+            if advanced:
+                has_advanced = True
+                if not include_advanced:
+                    continue
+
             desc = info.description or ""
-            field = f"{indent}{name}"
+            display_name = edit_key if edit_key else name
+            suffix = f" (returned as {name})" if edit_key else ""
+
+            field = f"{indent}{display_name}"
             padding = max(1, col - len(field))
-            lines.append(f"{field}{' ' * padding}{desc}")
+            lines.append(f"{field}{' ' * padding}{desc}{suffix}")
             # Unwrap Optional (X | None) and list[X] to check for nested WeKanModel
             ann = info.annotation
             if isinstance(ann, _types.UnionType):
@@ -170,22 +190,50 @@ def _fields_help(model, label):
     if schema_extra.get("partial_field_def"):
         lines.append("")
         lines.append("Partial field list, consult API docs for full object schema")
+    if has_advanced and not include_advanced:
+        lines.append("")
+        lines.append("Use --help-all to see all available parameters")
     return "\n".join(lines)
 
 
-BOARD_FIELDS_HELP = _fields_help(BoardDetails, "board fields")
-LIST_FIELDS_HELP = _fields_help(ListDetails, "list fields")
-SWIMLANE_FIELDS_HELP = _fields_help(SwimlaneDetails, "swimlane fields")
-CARD_FIELDS_HELP = _fields_help(CardDetails, "card fields")
-COMMENT_FIELDS_HELP = _fields_help(CommentDetails, "comment fields")
-CHECKLIST_FIELDS_HELP = _fields_help(ChecklistDetails, "checklist fields")
-CHECKLIST_ITEM_FIELDS_HELP = _fields_help(ChecklistItemDetails, "checklist-item fields")
+BOARD_FIELDS_HELP = _fields_help(BoardDetails, "board edit parameters")
+LIST_FIELDS_HELP = _fields_help(ListDetails, "list edit parameters")
+SWIMLANE_FIELDS_HELP = _fields_help(SwimlaneDetails, "swimlane edit parameters")
+CARD_FIELDS_HELP = _fields_help(CardDetails, "card edit parameters")
+CARD_FIELDS_HELP_ALL = _fields_help(
+    CardDetails, "card edit parameters", include_advanced=True
+)
+COMMENT_FIELDS_HELP = _fields_help(CommentDetails, "comment edit parameters")
+CHECKLIST_FIELDS_HELP = _fields_help(ChecklistDetails, "checklist edit parameters")
+CHECKLIST_ITEM_FIELDS_HELP = _fields_help(
+    ChecklistItemDetails, "checklist-item edit parameters"
+)
 LABEL_COLORS_HELP = "colors:\n  " + ", ".join(c.value for c in Color)
 
 
 # ---------------------------------------------------------------------------
 # Parser construction
 # ---------------------------------------------------------------------------
+
+
+class _HelpAllAction(argparse.Action):
+    """Custom action that prints help with advanced fields and exits."""
+
+    def __init__(
+        self,
+        option_strings,
+        dest=argparse.SUPPRESS,
+        default=argparse.SUPPRESS,
+        **kwargs,
+    ):
+        super().__init__(
+            option_strings=option_strings, dest=dest, default=default, nargs=0, **kwargs
+        )
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        parser.epilog = getattr(parser, "_help_all_epilog", None)
+        parser.print_help()
+        parser.exit()
 
 
 def _build_parser_action_get(actions):
@@ -403,6 +451,12 @@ def _build_parser_action_create(actions):
         epilog=CARD_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    p._help_all_epilog = CARD_FIELDS_HELP_ALL
+    p.add_argument(
+        "--help-all",
+        action=_HelpAllAction,
+        help="Show extended (less common) parameters",
+    )
     p.add_argument("board_id", metavar="BOARD_ID")
     p.add_argument("list_id", metavar="LIST_ID")
     p.add_argument("title", metavar="TITLE")
@@ -474,6 +528,12 @@ def _build_parser_action_edit(actions):
         description="Update fields on an existing card.",
         epilog=CARD_FIELDS_HELP,
         formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p._help_all_epilog = CARD_FIELDS_HELP_ALL
+    p.add_argument(
+        "--help-all",
+        action=_HelpAllAction,
+        help="Show extended (less common) parameters",
     )
     p.add_argument("card_id", metavar="CARD_ID")
     add_data_field_options(p)
@@ -566,6 +626,31 @@ def _build_parser_action_delete(actions):
     p.set_defaults(handler=handle_delete_checklist_item)
 
 
+def _build_parser_action_archive(actions):
+    archive_parser = actions.add_parser(
+        "archive",
+        help="Archive a resource",
+        description="Archive a resource (use --restore to unarchive).",
+        epilog="Run 'wekancli archive TYPE --help' for type-specific arguments.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    archive_parser.add_argument(
+        "--restore",
+        action="store_true",
+        default=False,
+        help="Restore (unarchive) instead of archiving",
+    )
+    types = archive_parser.add_subparsers(dest="type", title="types", metavar="TYPE")
+
+    p = types.add_parser(
+        "card",
+        help="Archive a card",
+        description="Archive or restore a card.",
+    )
+    p.add_argument("card_id", metavar="CARD_ID")
+    p.set_defaults(handler=handle_archive_card)
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="wekancli",
@@ -629,10 +714,11 @@ def build_parser():
         a for a in actions._choices_actions if a.metavar != "api"
     ]
 
-    _build_parser_action_get(actions)
     _build_parser_action_list(actions)
+    _build_parser_action_get(actions)
     _build_parser_action_create(actions)
     _build_parser_action_edit(actions)
+    _build_parser_action_archive(actions)
     _build_parser_action_delete(actions)
 
     return parser

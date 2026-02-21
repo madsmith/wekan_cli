@@ -503,6 +503,20 @@ class WeKanClient:
         self._check_response(response)
         return CardId.model_validate(response.json())
 
+    def archive_card(self, board_id: str, list_id: str, card_id: str) -> CardId:
+        """Archive a card."""
+        url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards/{card_id}/archive"
+        response = self.session.put(url, json={}, timeout=self.timeout)
+        self._check_response(response)
+        return CardId.model_validate(response.json())
+
+    def restore_card(self, board_id: str, list_id: str, card_id: str) -> CardId:
+        """Restore an archived card."""
+        url = f"{self.base_url}/api/boards/{board_id}/lists/{list_id}/cards/{card_id}/restore"
+        response = self.session.put(url, json={}, timeout=self.timeout)
+        self._check_response(response)
+        return CardId.model_validate(response.json())
+
     def get_swimlane_cards(self, board_id: str, swimlane_id: str) -> list[CardInfo]:
         """
         Get all cards in a swimlane

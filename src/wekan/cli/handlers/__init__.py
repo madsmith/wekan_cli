@@ -1,4 +1,5 @@
 from .api import handle_api
+from .archive import handle_archive_card
 from .create import (
     handle_create_board,
     handle_create_card,
@@ -46,6 +47,7 @@ from .login import handle_login
 
 __all__ = [
     "handle_api",
+    "handle_archive_card",
     "handle_create_board",
     "handle_create_card",
     "handle_create_checklist",

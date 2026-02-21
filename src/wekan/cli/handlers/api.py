@@ -2,10 +2,14 @@
 Handler for the hidden 'api' action (raw API calls).
 """
 
+import argparse
+
+from wekan.client import WeKanClient
+
 from ._helpers import merge_fields_with_stdin, output
 
 
-def handle_api(client, args):
+def handle_api(client: WeKanClient, args: argparse.Namespace) -> None:
     """Make a raw API call and output the response."""
     path = "/".join(args.path) if args.path else ""
     url = f"{client.base_url}/api/{path}"

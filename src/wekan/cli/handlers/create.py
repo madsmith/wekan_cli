@@ -2,28 +2,32 @@
 Handlers for the 'create' action.
 """
 
+import argparse
+
+from wekan.client import WeKanClient
+
 from ._helpers import error_exit, merge_fields_with_stdin, not_found, output
 
 
-def handle_create_label(client, args):
+def handle_create_label(client: WeKanClient, args: argparse.Namespace) -> None:
     label_id = client.add_board_label(args.board_id, args.name, args.color)
     if label_id is None:
         error_exit("Label already exists on this board.")
     output({"labelId": label_id}, args.format)
 
 
-def handle_create_board(client, args):
+def handle_create_board(client: WeKanClient, args: argparse.Namespace) -> None:
     fields = merge_fields_with_stdin(args)
     board = client.create_board(args.title, args.owner_id, **fields)
     output(board, args.format)
 
 
-def handle_create_list(client, args):
+def handle_create_list(client: WeKanClient, args: argparse.Namespace) -> None:
     lst = client.create_list(args.board_id, args.title)
     output(lst, args.format)
 
 
-def handle_create_card(client, args):
+def handle_create_card(client: WeKanClient, args: argparse.Namespace) -> None:
     fields = merge_fields_with_stdin(args)
     description = fields.pop("description", None)
     lst = client.get_list(args.board_id, args.list_id)
@@ -41,7 +45,7 @@ def handle_create_card(client, args):
     output(card, args.format)
 
 
-def handle_create_comment(client, args):
+def handle_create_comment(client: WeKanClient, args: argparse.Namespace) -> None:
     card = client.get_card_by_id(args.card_id)
     if card is None:
         not_found(f"Card {args.card_id}")
@@ -51,7 +55,7 @@ def handle_create_comment(client, args):
     output(comment, args.format)
 
 
-def handle_create_checklist(client, args):
+def handle_create_checklist(client: WeKanClient, args: argparse.Namespace) -> None:
     card = client.get_card_by_id(args.card_id)
     if card is None:
         not_found(f"Card {args.card_id}")
@@ -61,7 +65,7 @@ def handle_create_checklist(client, args):
     output(checklist, args.format)
 
 
-def handle_create_checklist_item(client, args):
+def handle_create_checklist_item(client: WeKanClient, args: argparse.Namespace) -> None:
     card = client.get_card_by_id(args.card_id)
     if card is None:
         not_found(f"Card {args.card_id}")
@@ -71,6 +75,6 @@ def handle_create_checklist_item(client, args):
     output(item, args.format)
 
 
-def handle_create_swimlane(client, args):
+def handle_create_swimlane(client: WeKanClient, args: argparse.Namespace) -> None:
     swimlane = client.create_swimlane(args.board_id, args.title)
     output(swimlane, args.format)

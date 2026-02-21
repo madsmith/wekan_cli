@@ -2,17 +2,21 @@
 Handlers for the 'list' action.
 """
 
+import argparse
+
+from wekan.client import WeKanClient
+
 from ._helpers import not_found, output, resolve_card
 
 
-def handle_list_labels(client, args):
+def handle_list_labels(client: WeKanClient, args: argparse.Namespace) -> None:
     board = client.get_board(args.board_id)
     if board is None:
         not_found(f"Board {args.board_id}")
     output(board.labels or [], args.format)
 
 
-def handle_list_boards(client, args):
+def handle_list_boards(client: WeKanClient, args: argparse.Namespace) -> None:
     if args.user_id:
         boards = client.get_boards_for_user(args.user_id)
     else:
@@ -20,17 +24,17 @@ def handle_list_boards(client, args):
     output(boards, args.format)
 
 
-def handle_list_lists(client, args):
+def handle_list_lists(client: WeKanClient, args: argparse.Namespace) -> None:
     lists = client.get_lists(args.board_id)
     output(lists, args.format)
 
 
-def handle_list_swimlanes(client, args):
+def handle_list_swimlanes(client: WeKanClient, args: argparse.Namespace) -> None:
     swimlanes = client.get_swimlanes(args.board_id)
     output(swimlanes, args.format)
 
 
-def handle_list_cards(client, args):
+def handle_list_cards(client: WeKanClient, args: argparse.Namespace) -> None:
     swimlane_id = getattr(args, "swimlane_id", None)
     if swimlane_id:
         cards = client.get_swimlane_cards(args.board_id, swimlane_id)
@@ -39,18 +43,18 @@ def handle_list_cards(client, args):
     output(cards, args.format)
 
 
-def handle_list_users(client, args):
+def handle_list_users(client: WeKanClient, args: argparse.Namespace) -> None:
     users = client.get_users()
     output(users, args.format)
 
 
-def handle_list_comments(client, args):
+def handle_list_comments(client: WeKanClient, args: argparse.Namespace) -> None:
     card = resolve_card(client, args.card_id)
     comments = client.get_comments(card.boardId, args.card_id)
     output(comments, args.format)
 
 
-def handle_list_checklists(client, args):
+def handle_list_checklists(client: WeKanClient, args: argparse.Namespace) -> None:
     card = resolve_card(client, args.card_id)
     checklists = client.get_checklists(card.boardId, args.card_id)
     output(checklists, args.format)

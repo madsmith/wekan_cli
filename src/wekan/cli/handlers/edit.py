@@ -2,10 +2,14 @@
 Handlers for the 'edit' action.
 """
 
+import argparse
+
+from wekan.client import WeKanClient
+
 from ._helpers import error_exit, merge_fields_with_stdin, output, resolve_card
 
 
-def handle_edit_card(client, args):
+def handle_edit_card(client: WeKanClient, args: argparse.Namespace) -> None:
     fields = merge_fields_with_stdin(args)
     if not fields:
         error_exit("No fields to update. Use -f key=value or --json.")
@@ -14,7 +18,7 @@ def handle_edit_card(client, args):
     output(result, args.format)
 
 
-def handle_edit_checklist_item(client, args):
+def handle_edit_checklist_item(client: WeKanClient, args: argparse.Namespace) -> None:
     fields = merge_fields_with_stdin(args)
     if not fields:
         error_exit("No fields to update. Use -f key=value or --json.")
